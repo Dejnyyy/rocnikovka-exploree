@@ -57,8 +57,8 @@ Exploree je moderní webová aplikace pro vytváření, sdílení a objevování
 ### 1. Klonování repozitáře
 
 ```bash
-git clone https://github.com/your-username/exploree.git
-cd exploree
+git clone https://github.com/Dejnyyy/rocnikovka-exploree.git
+cd rocnikovka-exploree
 ```
 
 ### 2. Instalace závislostí
