@@ -1,24 +1,26 @@
+/* 1) Load Tailwind v4 */
 @import "tailwindcss";
 
+/* 2) dark: respond to the .dark class on <html> */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 3) (Optional) drive your CSS variables by the class, not media */
 :root {
   --background: #ffffff;
-  --foreground: #171717;
+  --foreground: #0a0a0a;
+}
+.dark {
+  --background: #0a0a0a;
+  --foreground: #ededed;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+/* 4) Smoothen transitions */
+* {
+  transition: background-color 0.15s ease, border-color 0.15s ease,
+    color 0.15s ease;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
+/* 5) Use the vars if you want the body to adapt too */
 body {
   background: var(--background);
   color: var(--foreground);

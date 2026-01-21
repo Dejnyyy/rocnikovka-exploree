@@ -1,0 +1,165 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id          String   @id @default(cuid()) @db.VarChar(25)
+  name        String?  @db.VarChar(50)
+  email       String?  @unique @db.VarChar(255)
+  image       String?  @db.Text
+  username    String?  @unique @db.VarChar(30)
+  bio         String?  @db.VarChar(120)
+
+  accounts    Account[]
+  sessions    Session[]
+  spots       Spot[]        @relation("UserSpots")
+  collections Collection[]  @relation("UserCollections")
+  likes       Like[]
+  saves       Save[]
+  visits      Visit[]
+  following   Follow[]      @relation("UserFollowing")
+  followers   Follow[]      @relation("UserFollowers")
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([name])
+  @@index([username])
+}
+
+model Account {
+  id                String  @id @default(cuid()) @db.VarChar(25)
+  userId            String  @db.VarChar(25)
+  type              String  @db.VarChar(50)
+  provider          String  @db.VarChar(50)
+  providerAccountId String  @db.VarChar(255)
+  refresh_token     String? @db.Text
+  access_token      String? @db.Text
+  expires_at        Int?
+  token_type        String? @db.VarChar(50)
+  scope             String? @db.VarChar(255)
+  id_token          String? @db.Text
+  session_state     String? @db.VarChar(255)
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid()) @db.VarChar(25)
+  sessionToken String   @unique @db.VarChar(255)
+  userId       String   @db.VarChar(25)
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String @db.VarChar(255)
+  token      String @unique @db.VarChar(255)
+  expires    DateTime
+  @@unique([identifier, token])
+}
+
+/* ---------- Exploree doména ---------- */
+model Spot {
+  id          String   @id @default(cuid()) @db.VarChar(25)
+  title       String   @db.VarChar(150)
+  slug        String   @unique @db.VarChar(100)
+  description String?  @db.VarChar(500)
+  lat         Float
+  lng         Float
+  city        String?  @db.VarChar(100)
+  country     String?  @db.VarChar(100)
+  coverUrl    String?  @db.Text
+  image       String   @db.Text
+  tags        Json     @default(dbgenerated("json_array()"))
+  authorId    String   @db.VarChar(25)
+  author      User     @relation("UserSpots", fields: [authorId], references: [id])
+
+  likes       Like[]
+  saves       Save[]
+  visits      Visit[]
+  collections CollectionSpot[]
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([authorId])
+  @@index([createdAt])
+  @@index([lat, lng])
+  @@fulltext([title, city, country])
+}
+
+model Collection {
+  id        String           @id @default(cuid()) @db.VarChar(25)
+  name      String           @db.VarChar(100)
+  slug      String           @db.VarChar(100)
+  userId    String           @db.VarChar(25)
+  user      User             @relation("UserCollections", fields: [userId], references: [id])
+  spots     CollectionSpot[]
+  isPublic  Boolean          @default(true)
+  createdAt DateTime         @default(now())
+  updatedAt DateTime         @updatedAt
+
+  @@index([userId])
+  @@unique([userId, name])
+  @@unique([userId, slug])
+}
+
+model CollectionSpot {
+  collectionId String     @db.VarChar(25)
+  spotId       String     @db.VarChar(25)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  spot         Spot       @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  addedAt      DateTime   @default(now())
+  @@id([collectionId, spotId])
+  @@index([spotId])
+}
+
+model Like {
+  userId    String   @db.VarChar(25)
+  spotId    String   @db.VarChar(25)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@id([userId, spotId])
+  @@index([spotId])
+}
+
+model Save {
+  userId    String   @db.VarChar(25)
+  spotId    String   @db.VarChar(25)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@id([userId, spotId])
+  @@index([spotId])
+}
+
+model Visit {
+  id        String   @id @default(cuid()) @db.VarChar(25)
+  userId    String   @db.VarChar(25)
+  spotId    String   @db.VarChar(25)
+  when      DateTime @default(now())
+  note      String?  @db.VarChar(280)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  @@index([userId, when])
+  @@index([spotId, when])
+}
+
+model Follow {
+  followerId  String   @db.VarChar(25)
+  followingId String   @db.VarChar(25)
+  follower    User     @relation("UserFollowing", fields: [followerId], references: [id], onDelete: Cascade)
+  following   User     @relation("UserFollowers", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+  @@id([followerId, followingId])
+  @@index([followerId])
+  @@index([followingId])
+}

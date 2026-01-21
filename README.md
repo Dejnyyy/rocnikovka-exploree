@@ -22,6 +22,35 @@ You can start editing the page by modifying `pages/index.tsx`. The page auto-upd
 
 The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/pages/building-your-application/routing/api-routes) instead of React pages.
 
+## Environment Variables
+
+Create a `.env` file in the root directory with the following variables:
+
+```env
+# Foursquare API (optional but recommended for place search)
+# Option 1: Places API v3 (Service API Key - may not work)
+FOURSQUARE_API_KEY=your_foursquare_api_key_here
+
+# Option 2: Legacy API v2 (Client ID + Secret - recommended)
+FOURSQUARE_CLIENT_ID=your_client_id_here
+FOURSQUARE_SECRET=your_client_secret_here
+```
+
+To get Foursquare API credentials:
+1. Go to [Foursquare Developer Portal](https://developer.foursquare.com/)
+2. Sign up or log in
+3. Create a new app
+4. Copy your credentials:
+   - For Legacy API v2 (recommended): Copy `Client ID` and `Client Secret`
+   - For Places API v3: Copy `Service API Key` (may require OAuth token instead)
+5. Add them to `.env`
+
+**Note:** The app will automatically use Legacy API v2 if available, as it's more reliable than Places API v3 with Service API Key.
+
+The Foursquare integration enables:
+- **Place search**: Users can search for places by name when creating a new spot
+- **Auto-fill**: Automatically fills in place details (name, address, city, country, etc.) when coordinates are entered
+
 This project uses [`next/font`](https://nextjs.org/docs/pages/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
 ## Learn More
