@@ -91,7 +91,7 @@ export function SwipeDeck({
   const [pickedSpot, setPickedSpot] = useState<Spot | null>(null);
   const [intentSpot, setIntentSpot] = useState<Spot | null>(null);
   const [isDragging, setIsDragging] = useState(false);
-  const [cardTilt, setCardTilt] = useState(0); 
+  const [cardTilt, setCardTilt] = useState(0);
 
   const top = spots[index];
   const next = spots[index + 1];
@@ -150,7 +150,7 @@ export function SwipeDeck({
       Promise.resolve(onSave(spot)).catch(() => {});
 
       setPickedSpot(spot);
-      setIntentSpot(spot); 
+      setIntentSpot(spot);
     } else {
       Promise.resolve(onSkip(spot)).catch(() => {});
     }
@@ -335,7 +335,7 @@ function SwipeCard({
           x.set(0);
         }
       }}
-      initial={{ opacity: 0, scale: 0.8, y: 6 }}
+      initial={{ opacity: 1, scale: 0.995, y: 8 }}
       animate={{ opacity: 1, scale: 1, y: 0 }}
       custom={finalExitDir}
     >
