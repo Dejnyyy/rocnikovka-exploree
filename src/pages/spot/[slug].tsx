@@ -1,4 +1,5 @@
 // pages/spot/[slug].tsx
+import { useState } from "react";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
@@ -6,6 +7,10 @@ import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
 import { useSession } from "next-auth/react";
 import prisma from "@/lib/prisma";
 import HeaderWithMenu from "@/components/HeaderWithMenu";
+import {
+  SaveToCollectionSheet,
+  SaveBurst,
+} from "@/components/SaveToCollectionSheet";
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const slug = (ctx.params?.slug as string | undefined) ?? "";
@@ -111,6 +116,8 @@ export default function SpotDetailPage({
   privateCollectionsCount,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { data: session } = useSession();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const [showBurst, setShowBurst] = useState(false);
 
   const viewerName =
     (session?.user?.name as string) ??
@@ -231,6 +238,29 @@ export default function SpotDetailPage({
               </div>
             )}
 
+            {/* Save to collection button */}
+            {session && (
+              <button
+                onClick={() => setPickerOpen(true)}
+                className="inline-flex items-center gap-2 rounded-xl border border-zinc-300 bg-white px-4 py-2.5 text-sm font-medium hover:bg-zinc-50 dark:border-zinc-700 dark:bg-zinc-900 dark:hover:bg-zinc-800 transition-colors"
+              >
+                <svg
+                  className="h-5 w-5"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M5 5a2 2 0 012-2h10a2 2 0 012 2v16l-7-3.5L5 21V5z"
+                  />
+                </svg>
+                Save to collection
+              </button>
+            )}
+
             {/* Tags - mobile only */}
             {Array.isArray(spot.tags) && spot.tags.length > 0 && (
               <div className="lg:hidden">
@@ -324,7 +354,7 @@ export default function SpotDetailPage({
                             by @{col.username}
                           </div>
                         </Link>
-                      )
+                      ),
                     )}
                   {privateCollectionsCount > 0 && (
                     <div className="block rounded-lg border border-zinc-200 bg-white px-3 py-2 text-sm dark:border-zinc-800 dark:bg-zinc-900">
@@ -374,6 +404,20 @@ export default function SpotDetailPage({
             )}
           </div>
         </div>
+
+        {/* Save to collection sheet */}
+        <SaveToCollectionSheet
+          open={pickerOpen}
+          spot={{ id: spot.id, title: spot.title }}
+          onClose={() => setPickerOpen(false)}
+          onSaved={() => {
+            setShowBurst(true);
+            setTimeout(() => setShowBurst(false), 900);
+          }}
+        />
+
+        {/* Success burst */}
+        <SaveBurst show={showBurst} />
       </main>
     </div>
   );

@@ -108,7 +108,7 @@ export default function Sidebar({
       setActiveTab("new");
     } else if (path.includes("/profile")) {
       setActiveTab("profile");
-    } else if (path.includes("/explore")) {
+    } else if (path.includes("/explore") || path.includes("/spot/")) {
       setActiveTab("explore");
     } else if (path.includes("/people") || path.includes("/u/")) {
       setActiveTab("people");
