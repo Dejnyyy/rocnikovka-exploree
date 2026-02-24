@@ -184,6 +184,44 @@ export default function HeaderWithMenu({
 
                 <div className="border-t border-zinc-200 dark:border-zinc-800 my-1" />
 
+                <div className="px-3 py-2" role="group" aria-label="Theme">
+                  <div className="pb-2 text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                    Theme
+                  </div>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        applyTheme("light");
+                      }}
+                      className={`flex-1 rounded-xl px-3 py-2 text-center text-sm border transition-colors ${
+                        theme === "light"
+                          ? "border-zinc-300 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 font-medium text-zinc-900 dark:text-white"
+                          : "border-transparent text-zinc-700 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      }`}
+                    >
+                      Light
+                    </button>
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        applyTheme("dark");
+                      }}
+                      className={`flex-1 rounded-xl px-3 py-2 text-center text-sm border transition-colors ${
+                        theme === "dark"
+                          ? "border-zinc-300 bg-zinc-100 dark:border-zinc-700 dark:bg-zinc-800 font-medium text-zinc-900 dark:text-white"
+                          : "border-transparent text-zinc-700 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+                      }`}
+                    >
+                      Dark
+                    </button>
+                  </div>
+                </div>
+
+                <div className="border-t border-zinc-200 dark:border-zinc-800 my-1" />
+
                 <button
                   role="menuitem"
                   onClick={() => {
@@ -195,7 +233,7 @@ export default function HeaderWithMenu({
                   Sign out
                 </button>
               </div>,
-              document.body
+              document.body,
             )}
         </div>
       </header>
