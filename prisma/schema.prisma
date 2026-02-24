@@ -22,6 +22,7 @@ model User {
   collections Collection[]  @relation("UserCollections")
   likes       Like[]
   saves       Save[]
+  comments    Comment[]
   visits      Visit[]
   following   Follow[]      @relation("UserFollowing")
   followers   Follow[]      @relation("UserFollowers")
@@ -84,6 +85,7 @@ model Spot {
   likes       Like[]
   saves       Save[]
   visits      Visit[]
+  comments    Comment[]
   collections CollectionSpot[]
 
   createdAt   DateTime @default(now())
@@ -162,4 +164,16 @@ model Follow {
   @@id([followerId, followingId])
   @@index([followerId])
   @@index([followingId])
+}
+
+model Comment {
+  id        String   @id @default(cuid()) @db.VarChar(25)
+  text      String   @db.VarChar(500)
+  userId    String   @db.VarChar(25)
+  spotId    String   @db.VarChar(25)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  spot      Spot     @relation(fields: [spotId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  @@index([spotId, createdAt])
+  @@index([userId])
 }
