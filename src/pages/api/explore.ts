@@ -37,14 +37,13 @@ export default async function handler(
   const where: any = {};
 
   if (q) {
+    const qLower = q.toLowerCase();
     where.OR = [
-      { title: { contains: q, lte: "insensitive" } },
-      { city: { contains: q, lte: "insensitive" } },
-      { country: { contains: q, lte: "insensitive" } },
-      // loose match against tags: try to see if any tag contains 'q'
-      // Prisma doesn't support "contains" within JSON strings,
-      // but we can attempt equality when user types an exact tag.
-      { tags: { array_contains: q } },
+      { title: { contains: q } },
+      { city: { contains: q } },
+      { country: { contains: q } },
+      // Match tags case-insensitively (assumes tags are stored lowercase)
+      { tags: { array_contains: qLower } },
     ];
   }
 
@@ -113,11 +112,9 @@ export default async function handler(
     res.status(200).json({ items, nextCursor });
   } catch (e: unknown) {
     console.error(e);
-    res
-      .status(500)
-      .json({
-        error: "Unexpected error",
-        detail: e instanceof Error ? e.message : String(e),
-      });
+    res.status(500).json({
+      error: "Unexpected error",
+      detail: e instanceof Error ? e.message : String(e),
+    });
   }
 }
