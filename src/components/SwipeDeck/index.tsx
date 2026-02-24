@@ -14,6 +14,7 @@ import {
   SaveToCollectionSheet,
   SaveIntentToast,
 } from "@/components/SaveToCollectionSheet";
+import { CommentSheet } from "@/components/CommentSheet";
 import Image from "next/image";
 
 /* ================= Cloudinary helpers ================= */
@@ -69,6 +70,7 @@ type SwipeDeckProps = {
   onSave: (s: Spot) => Promise<void> | void; // right
   onSkip: (s: Spot) => Promise<void> | void; // left
   onEmpty?: () => void;
+  onCardChange?: (spot: Spot | null) => void;
   className?: string;
 };
 
@@ -77,6 +79,7 @@ export function SwipeDeck({
   onSave,
   onSkip,
   onEmpty,
+  onCardChange,
   className,
 }: SwipeDeckProps) {
   const [index, setIndex] = useState(0);
@@ -93,6 +96,9 @@ export function SwipeDeck({
   const [isDragging, setIsDragging] = useState(false);
   const [cardTilt, setCardTilt] = useState(0);
 
+  const [commentsOpen, setCommentsOpen] = useState(false);
+  const [commentSpotId, setCommentSpotId] = useState<string | null>(null);
+
   const top = spots[index];
   const next = spots[index + 1];
   const prevTopRef = useRef<Spot | null>(null);
@@ -102,6 +108,7 @@ export function SwipeDeck({
     if (top) {
       prevTopRef.current = top;
     }
+    onCardChange?.(top ?? null);
   }, [top?.id]); // Only update when the spot ID changes
 
   useEffect(() => {
@@ -168,6 +175,11 @@ export function SwipeDeck({
     void commit(dir, top);
   };
 
+  const handleOpenComments = (spotId: string) => {
+    setCommentSpotId(spotId);
+    setCommentsOpen(true);
+  };
+
   if (!top) return null;
 
   return (
@@ -217,6 +229,7 @@ export function SwipeDeck({
               setIsDragging(isDragging);
               setCardTilt(tilt);
             }}
+            onOpenComments={() => handleOpenComments(top.id)}
           />
         )}
       </AnimatePresence>
@@ -248,6 +261,13 @@ export function SwipeDeck({
 
       {/* Success burst */}
       <SaveBurst show={showBurst} />
+
+      {/* Comment sheet */}
+      <CommentSheet
+        open={commentsOpen}
+        spotId={commentSpotId ?? ""}
+        onClose={() => setCommentsOpen(false)}
+      />
     </div>
   );
 }
@@ -257,12 +277,14 @@ function SwipeCard({
   exitDir,
   onCommit,
   onDragChange,
+  onOpenComments,
 }: {
   spot: Spot;
   exitDir: "left" | "right" | null;
   onCommit: (dir: "left" | "right", spot: Spot) => void | Promise<void>;
   onFling: (dir: "left" | "right") => void;
   onDragChange?: (isDragging: boolean, tilt?: number) => void;
+  onOpenComments?: () => void;
 }) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-240, 0, 240], [-16, 0, 16]);
@@ -339,7 +361,11 @@ function SwipeCard({
       animate={{ opacity: 1, scale: 1, y: 0 }}
       custom={finalExitDir}
     >
-      <CardFace spot={spot} onPointerDownImage={startDragOnImage} />
+      <CardFace
+        spot={spot}
+        onPointerDownImage={startDragOnImage}
+        onOpenComments={onOpenComments}
+      />
 
       {/* Decision badges - positioned in opposite corners for mobile usability */}
       <motion.div
@@ -372,10 +398,12 @@ function CardFace({
   spot,
   dim,
   onPointerDownImage,
+  onOpenComments,
 }: {
   spot: Spot;
   dim?: boolean;
   onPointerDownImage?: (e: React.PointerEvent) => void;
+  onOpenComments?: () => void;
 }) {
   const location = useMemo(
     () => [spot.city, spot.country].filter(Boolean).join(", "),
@@ -454,8 +482,42 @@ function CardFace({
             </span>
           </div>
         ) : null}
-        <div className="text-lg font-semibold">{spot.title}</div>
-        {location && <div className="text-sm opacity-80">{location}</div>}
+
+        <div className="flex items-end justify-between gap-4 w-full">
+          <div className="flex-1 min-w-0">
+            <div className="text-lg font-semibold truncate text-white drop-shadow-md">
+              {spot.title}
+            </div>
+            {location && (
+              <div className="text-sm opacity-90 truncate text-white drop-shadow-md">
+                {location}
+              </div>
+            )}
+          </div>
+
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              onOpenComments?.();
+            }}
+            className="pointer-events-auto flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-black/40 text-white backdrop-blur-md hover:bg-black/60 transition-colors"
+            aria-label="View Comments"
+          >
+            <svg
+              className="h-5 w-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+              />
+            </svg>
+          </button>
+        </div>
       </div>
     </div>
   );

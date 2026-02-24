@@ -13,6 +13,7 @@ import {
 } from "@tanstack/react-query";
 import { InfiniteSwipeDeck } from "@/components/InfiniteSwipeDeck";
 import HeaderWithMenu from "@/components/HeaderWithMenu";
+import CommentSection from "@/components/CommentSection";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -165,6 +166,8 @@ function AuthedHome() {
       };
     });
 
+  const [currentSpotId, setCurrentSpotId] = useState<string | null>(null);
+
   const queryClient = useQueryClient();
   const saveMut = useMutation({
     mutationFn: async (s: Spot) =>
@@ -200,28 +203,43 @@ function AuthedHome() {
       />
 
       <main className="px-4 sm:px-6 pt-24 pb-32 md:pb-6 md:ml-72 overscroll-y-contain">
-        <div className="mx-auto flex w-full max-w-2xl items-center justify-center">
-          {isLoading ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              Loading places…
-            </p>
-          ) : isError ? (
-            <p className="text-sm text-red-500">Failed to load places.</p>
-          ) : spots.length === 0 ? (
-            <p className="text-sm text-zinc-500 dark:text-zinc-400">
-              No places yet. Add some spots to explore.
-            </p>
-          ) : (
-            <InfiniteSwipeDeck
-              spots={spots}
-              onSave={(s) => saveMut.mutate(s)}
-              onSkip={(s) => skipMut.mutate(s)}
-              onFetchMore={() => {
-                if (hasNextPage && !isFetchingNextPage) {
-                  fetchNextPage();
-                }
-              }}
-            />
+        <div className="mx-auto flex w-full max-w-5xl items-start justify-center gap-8">
+          {/* Swipe deck */}
+          <div className="flex items-center justify-center">
+            {isLoading ? (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                Loading places…
+              </p>
+            ) : isError ? (
+              <p className="text-sm text-red-500">Failed to load places.</p>
+            ) : spots.length === 0 ? (
+              <p className="text-sm text-zinc-500 dark:text-zinc-400">
+                No places yet. Add some spots to explore.
+              </p>
+            ) : (
+              <InfiniteSwipeDeck
+                spots={spots}
+                onSave={(s) => saveMut.mutate(s)}
+                onSkip={(s) => skipMut.mutate(s)}
+                onFetchMore={() => {
+                  if (hasNextPage && !isFetchingNextPage) {
+                    fetchNextPage();
+                  }
+                }}
+                onCardChange={(s) => setCurrentSpotId(s?.id ?? null)}
+              />
+            )}
+          </div>
+
+          {/* Comment panel — desktop only, beside the swipe card */}
+          {currentSpotId && (
+            <div className="hidden lg:flex flex-col w-80 flex-shrink-0 sticky top-28 max-h-[75vh] rounded-2xl border border-zinc-200 dark:border-zinc-800 bg-white dark:bg-zinc-900/80 p-4 backdrop-blur-sm">
+              <CommentSection
+                key={currentSpotId}
+                spotId={currentSpotId}
+                className="flex-1 min-h-0"
+              />
+            </div>
           )}
         </div>
 

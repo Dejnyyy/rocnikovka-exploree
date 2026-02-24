@@ -65,6 +65,7 @@ export default function DiscoverPage() {
   const [pins, setPins] = useState<Pin[]>([]);
   const [cursor, setCursor] = useState<string | null>(null);
   const [query, setQuery] = useState("");
+  const [debouncedQuery, setDebouncedQuery] = useState("");
   const [activeTag, setActiveTag] = useState<string>("all");
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
@@ -79,6 +80,14 @@ export default function DiscoverPage() {
       return next;
     });
 
+  // Debounce the query to prevent flashing on every keystroke
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(query);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query]);
+
   // first load + when filters change
   useEffect(() => {
     setPins([]);
@@ -87,7 +96,7 @@ export default function DiscoverPage() {
     setOpen(new Set());
     void loadMore(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [query, activeTag]);
+  }, [debouncedQuery, activeTag]);
 
   useEffect(() => {
     const target = sentinelRef.current;
@@ -96,7 +105,7 @@ export default function DiscoverPage() {
       (entries) => {
         entries.forEach((e) => e.isIntersecting && void loadMore());
       },
-      { rootMargin: "1200px 0px" }
+      { rootMargin: "1200px 0px" },
     );
     io.observe(target);
     return () => io.unobserve(target);
@@ -108,7 +117,7 @@ export default function DiscoverPage() {
     const params = new URLSearchParams();
     if (cursor && !reset) params.set("cursor", cursor);
     params.set("limit", "48");
-    if (query) params.set("q", query);
+    if (debouncedQuery) params.set("q", debouncedQuery);
     if (activeTag && activeTag !== "all") params.set("tag", activeTag);
 
     const res = await fetch(`/api/explore?${params.toString()}`);
@@ -129,8 +138,12 @@ export default function DiscoverPage() {
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
     return pins.filter((p) => {
+      const tagsText = (p.tags ?? []).join(" ").toLowerCase();
       const matchesText =
-        !q || `${p.title ?? ""} ${p.location ?? ""}`.toLowerCase().includes(q);
+        !q ||
+        `${p.title ?? ""} ${p.location ?? ""} ${tagsText}`
+          .toLowerCase()
+          .includes(q);
       const matchesTag =
         activeTag === "all" || (p.tags ?? []).includes(activeTag);
       return matchesText && matchesTag;

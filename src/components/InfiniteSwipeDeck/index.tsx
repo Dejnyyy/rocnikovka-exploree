@@ -8,6 +8,7 @@ type InfiniteSwipeDeckProps = {
   onSave: (s: Spot) => Promise<void> | void;
   onSkip: (s: Spot) => Promise<void> | void;
   onFetchMore?: () => void;
+  onCardChange?: (spot: Spot | null) => void;
   className?: string;
 };
 
@@ -21,11 +22,12 @@ export function InfiniteSwipeDeck({
   onSave,
   onSkip,
   onFetchMore,
+  onCardChange,
   className,
 }: InfiniteSwipeDeckProps) {
   const { spots: shuffledSpots, getNextBatch } = useInfiniteShuffledSpots(
     spots,
-    onFetchMore
+    onFetchMore,
   );
 
   // Handle when SwipeDeck runs out of spots or is getting low
@@ -54,6 +56,7 @@ export function InfiniteSwipeDeck({
       onSave={onSave}
       onSkip={onSkip}
       onEmpty={handleEmpty}
+      onCardChange={onCardChange}
       className={className}
     />
   );
