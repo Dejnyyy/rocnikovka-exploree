@@ -11,6 +11,8 @@ import {
   SaveToCollectionSheet,
   SaveBurst,
 } from "@/components/SaveToCollectionSheet";
+import CommentSection from "@/components/CommentSection";
+import { CommentSheet } from "@/components/CommentSheet";
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const slug = (ctx.params?.slug as string | undefined) ?? "";
@@ -92,6 +94,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
   // Separate public and private collections
   const savedIn = allCollections.filter((c) => c.isPublic);
   const privateCount = allCollections.filter((c) => !c.isPublic).length;
+  const directSavesCount = spot._count.saves; // Direct saves (not in collections)
 
   return {
     props: {
@@ -106,6 +109,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       },
       savedIn,
       privateCollectionsCount: privateCount,
+      directSavesCount,
     },
   };
 };
@@ -114,10 +118,12 @@ export default function SpotDetailPage({
   spot,
   savedIn,
   privateCollectionsCount,
+  directSavesCount,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { data: session } = useSession();
   const [pickerOpen, setPickerOpen] = useState(false);
   const [showBurst, setShowBurst] = useState(false);
+  const [commentsOpen, setCommentsOpen] = useState(false);
 
   const viewerName =
     (session?.user?.name as string) ??
@@ -285,6 +291,44 @@ export default function SpotDetailPage({
                 </p>
               </div>
             )}
+
+            {/* Comments - mobile only */}
+            <div className="lg:hidden mt-2">
+              <button
+                onClick={() => setCommentsOpen(true)}
+                className="w-full rounded-2xl border border-zinc-200 bg-white px-4 py-3.5 text-sm font-medium hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/50 dark:hover:bg-zinc-800 transition-colors flex items-center justify-between"
+              >
+                <div className="flex items-center gap-2 text-zinc-700 dark:text-zinc-300">
+                  <svg
+                    className="h-5 w-5"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M8 12h.01M12 12h.01M16 12h.01M21 12c0 4.418-4.03 8-9 8a9.863 9.863 0 01-4.255-.949L3 20l1.395-3.72C3.512 15.042 3 13.574 3 12c0-4.418 4.03-8 9-8s9 3.582 9 8z"
+                    />
+                  </svg>
+                  View Comments
+                </div>
+                <svg
+                  className="h-4 w-4 text-zinc-400"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M9 5l7 7-7 7"
+                  />
+                </svg>
+              </button>
+            </div>
           </div>
 
           {/* Sidebar - right side (desktop only) */}
@@ -314,7 +358,6 @@ export default function SpotDetailPage({
                 Stats
               </h3>
               <div className="space-y-2 text-sm text-zinc-600 dark:text-zinc-400">
-                <div>{spot._count.likes} likes</div>
                 <div>{spot._count.saves} saves</div>
                 <div>
                   {new Date(spot.createdAt).toLocaleDateString("en-US", {
@@ -402,6 +445,9 @@ export default function SpotDetailPage({
                 </a>
               </div>
             )}
+
+            {/* Comments - desktop */}
+            <CommentSection spotId={spot.id} className="max-h-[400px]" />
           </div>
         </div>
 
@@ -414,6 +460,13 @@ export default function SpotDetailPage({
             setShowBurst(true);
             setTimeout(() => setShowBurst(false), 900);
           }}
+        />
+
+        {/* Comment sheet */}
+        <CommentSheet
+          open={commentsOpen}
+          spotId={spot.id}
+          onClose={() => setCommentsOpen(false)}
         />
 
         {/* Success burst */}
