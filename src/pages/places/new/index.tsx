@@ -946,17 +946,7 @@ function CreatePlaceInner() {
 
               {/* Location */}
               <div className="grid gap-3">
-                <div className="flex items-center justify-between">
-                  <label className="text-sm font-medium">Location *</label>
-                  <button
-                    type="button"
-                    onClick={() => setShowMapPicker(!showMapPicker)}
-                    className="text-xs text-zinc-500 hover:text-zinc-700 dark:text-zinc-400 dark:hover:text-zinc-200 flex items-center gap-1"
-                  >
-                    <MapPin className="h-3 w-3" />
-                    {showMapPicker ? "Hide map" : "Pick on map"}
-                  </button>
-                </div>
+                <label className="text-sm font-medium">Location *</label>
 
                 {showMapPicker ? (
                   <div className="space-y-2">
