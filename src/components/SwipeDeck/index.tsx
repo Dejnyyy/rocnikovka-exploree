@@ -87,6 +87,7 @@ export function SwipeDeck({
   const exitDirRef = useRef<"left" | "right" | null>(null);
   const exitingSpotIdRef = useRef<string | null>(null);
   const spotExitDirRef = useRef<Map<string, "left" | "right">>(new Map());
+  const isAnimatingRef = useRef(false);
 
   // UI: confirmation toast + sheet + success burst
   const [showBurst, setShowBurst] = useState(false);
@@ -132,7 +133,7 @@ export function SwipeDeck({
   // Keyboard shortcuts
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (!top) return;
+      if (!top || isAnimatingRef.current) return;
       if (e.key === "ArrowRight") fling("right");
       if (e.key === "ArrowLeft") fling("left");
     };
@@ -141,6 +142,9 @@ export function SwipeDeck({
   }, [top]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const commit = async (dir: "left" | "right", spot: Spot) => {
+    if (isAnimatingRef.current) return;
+    isAnimatingRef.current = true;
+
     // Store the direction and spot ID BEFORE updating index
     // This ensures the exiting card gets the correct direction
     exitDirRef.current = dir;
@@ -167,6 +171,7 @@ export function SwipeDeck({
       exitDirRef.current = null;
       exitingSpotIdRef.current = null;
       spotExitDirRef.current.delete(spot.id); // Clean up
+      isAnimatingRef.current = false;
     }, 320);
   };
 
