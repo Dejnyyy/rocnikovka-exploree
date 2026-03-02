@@ -187,7 +187,7 @@ export function SwipeDeck({
       className={`relative h-[72vh] w-[min(92vw,420px)] ${className ?? ""}`}
       aria-label="Swipe deck"
     >
-      <AnimatePresence initial={false}>
+      <AnimatePresence initial={false} custom={exitDir ?? "left"}>
         {/* Background/next card */}
         {next && (
           <motion.div
@@ -462,7 +462,7 @@ function CardFace({
                 className="rounded-full ring-2 ring-white/30 shadow-sm"
               />
             )}
-            <span className="text-sm font-medium opacity-95 drop-shadow-sm">
+            <span className="text-sm font-medium opacity-95 drop-shadow-sm text-zinc-900 dark:text-white">
               {spot.author.username ?? spot.author.name}
             </span>
           </Link>
@@ -477,7 +477,7 @@ function CardFace({
                 className=" rounded-full ring-2 ring-white/30 shadow-sm"
               />
             )}
-            <span className="text-sm font-medium opacity-95 drop-shadow-sm">
+            <span className="text-sm font-medium opacity-95 drop-shadow-sm text-zinc-900 dark:text-white">
               {spot.author.username ?? spot.author.name}
             </span>
           </div>
@@ -485,11 +485,11 @@ function CardFace({
 
         <div className="flex items-end justify-between gap-4 w-full">
           <div className="flex-1 min-w-0">
-            <div className="text-lg font-semibold truncate text-white drop-shadow-md">
+            <div className="text-lg font-semibold truncate text-zinc-900 dark:text-white drop-shadow-md">
               {spot.title}
             </div>
             {location && (
-              <div className="text-sm opacity-90 truncate text-white drop-shadow-md">
+              <div className="text-sm opacity-90 truncate text-zinc-900 dark:text-white drop-shadow-md">
                 {location}
               </div>
             )}
