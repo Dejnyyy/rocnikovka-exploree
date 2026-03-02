@@ -19,7 +19,14 @@ type SidebarProps = {
 
 type Theme = "light" | "dark";
 
-type ActiveTab = "home" | "new" | "profile" | "explore" | "people" | "saved";
+type ActiveTab =
+  | "home"
+  | "new"
+  | "profile"
+  | "explore"
+  | "people"
+  | "saved"
+  | "invites";
 
 function ThemeSwitcher() {
   const [theme, setTheme] = useState<Theme>("light");
@@ -99,6 +106,7 @@ export default function Sidebar({
   const label = displayName ?? emailFallback ?? "User";
   const initial = label?.charAt(0)?.toUpperCase() ?? "";
   const [activeTab, setActiveTab] = useState<ActiveTab>("home");
+  const [inviteCount, setInviteCount] = useState(0);
 
   useEffect(() => {
     const path = router.asPath.split("?")[0];
@@ -114,9 +122,19 @@ export default function Sidebar({
       setActiveTab("people");
     } else if (path.includes("/saved")) {
       setActiveTab("saved");
+    } else if (path.includes("/invites")) {
+      setActiveTab("invites");
     } else {
       setActiveTab("home");
     }
+  }, [router.asPath]);
+
+  // Fetch pending invite count
+  useEffect(() => {
+    fetch("/api/me/invites")
+      .then((r) => r.json())
+      .then((d) => setInviteCount((d.invites ?? []).length))
+      .catch(() => {});
   }, [router.asPath]);
 
   return (
@@ -277,6 +295,38 @@ export default function Sidebar({
             </svg>
             Saved
           </Link>
+
+          {/* Pending invites link */}
+          {inviteCount > 0 && (
+            <Link
+              href="/invites"
+              className={`${quicksand.className} flex items-center gap-3 rounded-full px-4 py-3 text-lg font-semibold
+                hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors ${
+                  activeTab === "invites"
+                    ? "bg-zinc-100 dark:bg-zinc-800 text-black dark:text-white bg-gradient-to-r from-pink-400 to-yellow-300 dark:from-pink-400 dark:to-yellow-300"
+                    : ""
+                }`}
+            >
+              <span className="relative">
+                <svg
+                  className="h-5 w-5"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9" />
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0" />
+                </svg>
+                <span className="absolute -top-1.5 -right-2 flex h-4 min-w-[16px] items-center justify-center rounded-full bg-amber-500 px-1 text-[10px] font-bold text-white">
+                  {inviteCount}
+                </span>
+              </span>
+              Invites
+            </Link>
+          )}
 
           <div className="my-2 border-t border-zinc-200 dark:border-zinc-800" />
 
