@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useEffect, useState } from "react";
 
 type BottomNavigationProps = {
   avatarUrl?: string;
@@ -9,6 +10,7 @@ type BottomNavigationProps = {
 
 export default function BottomNavigation({ avatarUrl }: BottomNavigationProps) {
   const router = useRouter();
+  const [inviteCount, setInviteCount] = useState(0);
 
   const isActive = (path: string) => {
     if (path === "/") {
@@ -16,6 +18,13 @@ export default function BottomNavigation({ avatarUrl }: BottomNavigationProps) {
     }
     return router.pathname === path || router.pathname.startsWith(path + "/");
   };
+
+  useEffect(() => {
+    fetch("/api/me/invites")
+      .then((r) => r.json())
+      .then((d) => setInviteCount((d.invites ?? []).length))
+      .catch(() => {});
+  }, [router.asPath]);
 
   return (
     <nav
@@ -129,26 +138,33 @@ export default function BottomNavigation({ avatarUrl }: BottomNavigationProps) {
           }`}
           aria-label="Profile"
         >
-          {avatarUrl ? (
-            <img
-              src={avatarUrl}
-              alt="Profile"
-              className="h-6 w-6 rounded-lg object-cover"
-            />
-          ) : (
-            <svg
-              className="h-6 w-6"
-              viewBox="0 0 20 20"
-              fill="currentColor"
-              aria-hidden="true"
-            >
-              <path
-                fillRule="evenodd"
-                d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
-                clipRule="evenodd"
+          <span className="relative">
+            {avatarUrl ? (
+              <img
+                src={avatarUrl}
+                alt="Profile"
+                className="h-6 w-6 rounded-lg object-cover"
               />
-            </svg>
-          )}
+            ) : (
+              <svg
+                className="h-6 w-6"
+                viewBox="0 0 20 20"
+                fill="currentColor"
+                aria-hidden="true"
+              >
+                <path
+                  fillRule="evenodd"
+                  d="M10 9a3 3 0 100-6 3 3 0 000 6zm-7 9a7 7 0 1114 0H3z"
+                  clipRule="evenodd"
+                />
+              </svg>
+            )}
+            {inviteCount > 0 && (
+              <span className="absolute -top-0.5 -right-1 flex h-3 w-3 items-center justify-center rounded-full bg-amber-500">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-400 opacity-75" />
+              </span>
+            )}
+          </span>
           <span className="text-[10px]">Profile</span>
         </Link>
       </div>

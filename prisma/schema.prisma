@@ -26,6 +26,7 @@ model User {
   visits      Visit[]
   following   Follow[]      @relation("UserFollowing")
   followers   Follow[]      @relation("UserFollowers")
+  collectionMemberships CollectionMember[] @relation("CollectionMembers")
 
   createdAt   DateTime @default(now())
   updatedAt   DateTime @updatedAt
@@ -104,6 +105,7 @@ model Collection {
   userId    String           @db.VarChar(25)
   user      User             @relation("UserCollections", fields: [userId], references: [id])
   spots     CollectionSpot[]
+  members   CollectionMember[]
   isPublic  Boolean          @default(true)
   createdAt DateTime         @default(now())
   updatedAt DateTime         @updatedAt
@@ -111,6 +113,21 @@ model Collection {
   @@index([userId])
   @@unique([userId, name])
   @@unique([userId, slug])
+}
+
+model CollectionMember {
+  id           String     @id @default(cuid()) @db.VarChar(25)
+  collectionId String     @db.VarChar(25)
+  userId       String     @db.VarChar(25)
+  role         String     @default("editor") @db.VarChar(20)
+  status       String     @default("pending") @db.VarChar(20)
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+  user         User       @relation("CollectionMembers", fields: [userId], references: [id], onDelete: Cascade)
+  invitedAt    DateTime   @default(now())
+  respondedAt  DateTime?
+
+  @@unique([collectionId, userId])
+  @@index([userId, status])
 }
 
 model CollectionSpot {

@@ -6,7 +6,7 @@ import prisma from "@/lib/prisma";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "POST") {
     res.setHeader("Allow", "POST");
@@ -17,7 +17,7 @@ export default async function handler(
   const session = (await getServerSession(
     req,
     res,
-    authOptions
+    authOptions,
   )) as Session | null;
   const userId = session?.user?.id;
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
@@ -29,12 +29,20 @@ export default async function handler(
   if (!collectionId || !spotId)
     return res.status(400).json({ error: "Missing params" });
 
-  // ownership check
+  // ownership or membership check
   const owns = await prisma.collection.findFirst({
     where: { id: collectionId, userId },
     select: { id: true },
   });
-  if (!owns) return res.status(404).json({ error: "Collection not found" });
+  if (!owns) {
+    // check if user is an accepted member
+    const isMember = await prisma.collectionMember.findFirst({
+      where: { collectionId, userId, status: "accepted" },
+      select: { id: true },
+    });
+    if (!isMember)
+      return res.status(404).json({ error: "Collection not found" });
+  }
 
   await prisma.collectionSpot.upsert({
     where: { collectionId_spotId: { collectionId, spotId } },

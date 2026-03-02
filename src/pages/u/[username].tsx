@@ -122,6 +122,44 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
     isPublic: c.isPublic,
   }));
 
+  // Shared collections (accepted memberships)
+  const sharedMemberships = await prisma.collectionMember.findMany({
+    where: { userId: user.id, status: "accepted" },
+    select: {
+      collection: {
+        select: {
+          id: true,
+          name: true,
+          slug: true,
+          isPublic: true,
+          user: { select: { username: true } },
+          _count: { select: { spots: true } },
+          spots: {
+            take: 1,
+            orderBy: { addedAt: "desc" },
+            select: { spot: { select: { coverUrl: true, image: true } } },
+          },
+        },
+      },
+    },
+  });
+
+  // For viewers other than the owner, only show public shared collections
+  const sharedCollections = sharedMemberships
+    .filter((m) => m.collection.isPublic || isOwner)
+    .map((m) => {
+      const c = m.collection;
+      return {
+        id: c.id,
+        name: c.name,
+        slug: c.slug,
+        count: c._count.spots,
+        coverUrl: c.spots[0]?.spot.coverUrl ?? c.spots[0]?.spot.image ?? null,
+        isPublic: c.isPublic,
+        ownerUsername: c.user.username,
+      };
+    });
+
   // Latest spots by this user
   const spots = await prisma.spot.findMany({
     where: { author: { is: { id: user.id } } },
@@ -148,6 +186,7 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
         createdAt: user.createdAt.toISOString(),
       },
       collections,
+      sharedCollections,
       latestSpots: spots,
       followStatus: {
         isFollowing,
@@ -394,6 +433,7 @@ function FollowStatusBadge({
 export default function PublicProfilePage({
   profile,
   collections,
+  sharedCollections,
   latestSpots,
   followStatus,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
@@ -568,6 +608,48 @@ export default function PublicProfilePage({
                     username={profile.username}
                   />
                 ))}
+              </div>
+            )}
+
+            {/* Shared collections */}
+            {sharedCollections && (sharedCollections as any[]).length > 0 && (
+              <div className="mt-8">
+                <h2 className="mb-3 text-lg font-medium flex items-center gap-2">
+                  <svg
+                    width="16"
+                    height="16"
+                    viewBox="0 0 24 24"
+                    fill="none"
+                    stroke="currentColor"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    className="text-violet-500"
+                  >
+                    <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
+                    <circle cx="9" cy="7" r="4" />
+                    <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
+                    <path d="M16 3.13a4 4 0 0 1 0 7.75" />
+                  </svg>
+                  Shared collections
+                </h2>
+                <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-6 [column-fill:_balance]">
+                  {(
+                    sharedCollections as (CollectionItem & {
+                      ownerUsername?: string | null;
+                    })[]
+                  ).map((c) => (
+                    <CollectionPinCard
+                      key={c.id}
+                      id={c.id}
+                      name={c.name}
+                      slug={c.slug}
+                      coverUrl={c.coverUrl}
+                      count={c.count}
+                      username={c.ownerUsername ?? profile.username}
+                    />
+                  ))}
+                </div>
               </div>
             )}
           </section>
