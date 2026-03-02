@@ -136,7 +136,8 @@ function ProfileOverviewInner() {
             <p className="text-sm text-zinc-500 dark:text-zinc-400">
               Loading collections…
             </p>
-          ) : (colsQ.data?.items ?? []).length === 0 ? (
+          ) : (colsQ.data?.items ?? []).length === 0 &&
+            (colsQ.data?.shared ?? []).length === 0 ? (
             <div className="flex flex-col items-center justify-center py-16 text-center">
               <h3 className="mb-2 text-lg font-semibold">No collections yet</h3>
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
@@ -144,7 +145,31 @@ function ProfileOverviewInner() {
               </p>
             </div>
           ) : (
-            <GridCollections items={colsQ.data?.items ?? []} />
+            <>
+              {(colsQ.data?.items ?? []).length > 0 && (
+                <GridCollections items={colsQ.data?.items ?? []} />
+              )}
+              {(colsQ.data?.shared ?? []).length > 0 && (
+                <>
+                  <h3 className="mt-6 mb-3 text-sm font-semibold uppercase tracking-wide text-zinc-400 dark:text-zinc-500">
+                    Shared with you
+                  </h3>
+                  <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-6 [column-fill:_balance]">
+                    {(colsQ.data?.shared ?? []).map((c) => (
+                      <CollectionPinCard
+                        key={c.id}
+                        id={c.id}
+                        name={c.name}
+                        slug={c.slug}
+                        coverUrl={c.coverUrl}
+                        count={c.count}
+                        username={c.ownerUsername ?? ""}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+            </>
           )}
         </div>
       </div>

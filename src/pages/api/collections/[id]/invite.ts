@@ -42,6 +42,20 @@ export default async function handler(
   if (target.id === userId)
     return res.status(400).json({ error: "Cannot invite yourself" });
 
+  // Enforce max 10 collaborators (pending + accepted)
+  const memberCount = await prisma.collectionMember.count({
+    where: {
+      collectionId,
+      status: { in: ["pending", "accepted"] },
+    },
+  });
+  if (memberCount >= 10)
+    return res
+      .status(400)
+      .json({
+        error: "Collection already has the maximum of 10 collaborators",
+      });
+
   // Upsert membership (re-invite if previously declined)
   const member = await prisma.collectionMember.upsert({
     where: { collectionId_userId: { collectionId, userId: target.id } },

@@ -42,6 +42,15 @@ export function useMyCollections() {
           count: number;
           coverUrl: string | null;
         }>;
+        shared: Array<{
+          id: string;
+          name: string;
+          slug: string;
+          isPublic: boolean;
+          count: number;
+          coverUrl: string | null;
+          ownerUsername: string | null;
+        }>;
       }>("/api/me/collections"),
   });
 }

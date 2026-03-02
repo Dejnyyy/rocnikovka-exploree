@@ -6,7 +6,13 @@ import { motion, AnimatePresence } from "framer-motion";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 
 type SpotMini = { id: string; title: string };
-type Collection = { id: string; name: string; count: number };
+type Collection = {
+  id: string;
+  name: string;
+  count: number;
+  shared?: boolean;
+  ownerUsername?: string | null;
+};
 
 async function getJSON<T>(url: string): Promise<T> {
   const r = await fetch(url, { credentials: "include" });
@@ -18,8 +24,19 @@ export function useMyCollectionsLite() {
   return useQuery({
     queryKey: ["me", "collections", "lite"],
     queryFn: () =>
-      getJSON<{ items: Collection[] }>("/api/me/collections").then((v) => ({
-        items: v.items.map((c) => ({ id: c.id, name: c.name, count: c.count })),
+      getJSON<{ items: Collection[]; shared?: Collection[] }>(
+        "/api/me/collections",
+      ).then((v) => ({
+        items: [
+          ...v.items.map((c) => ({ id: c.id, name: c.name, count: c.count })),
+          ...(v.shared ?? []).map((c) => ({
+            id: c.id,
+            name: c.name,
+            count: c.count,
+            shared: true,
+            ownerUsername: (c as any).ownerUsername ?? null,
+          })),
+        ],
       })),
   });
 }
@@ -185,7 +202,7 @@ export function SaveToCollectionSheet({
     },
   });
 
-  const list = useMemo(() => {
+  const list = useMemo((): Collection[] => {
     const items = data?.items ?? [];
     if (!query.trim()) return items;
     const q = query.toLowerCase();
@@ -247,7 +264,14 @@ export function SaveToCollectionSheet({
                   disabled={addMut.isPending || createAndSaveMut.isPending}
                 >
                   <span className="truncate text-sm">{c.name}</span>
-                  <span className="text-xs text-zinc-500">{c.count} items</span>
+                  <span className="text-xs text-zinc-500 shrink-0">
+                    {c.shared && c.ownerUsername ? (
+                      <span className="text-pink-500 dark:text-pink-400 mr-1">
+                        @{c.ownerUsername}
+                      </span>
+                    ) : null}
+                    {c.count} items
+                  </span>
                 </button>
               ))}
 
@@ -279,7 +303,7 @@ export function SaveToCollectionSheet({
                 disabled={createAndSaveMut.isPending || !spot}
                 onClick={() => {
                   const el = document.getElementById(
-                    "__new_collection_name"
+                    "__new_collection_name",
                   ) as HTMLInputElement | null;
                   const name = el?.value?.trim();
                   if (name && spot) {

@@ -7,7 +7,7 @@ import type { Session } from "next-auth";
 
 export default async function handler(
   req: NextApiRequest,
-  res: NextApiResponse
+  res: NextApiResponse,
 ) {
   if (req.method !== "GET")
     return res.status(405).json({ error: "Method not allowed" });
@@ -15,7 +15,7 @@ export default async function handler(
   const session = (await getServerSession(
     req,
     res,
-    authOptions
+    authOptions,
   )) as Session | null;
   const userId = session?.user?.id;
   if (!userId) return res.status(401).json({ error: "Unauthorized" });
@@ -24,12 +24,14 @@ export default async function handler(
   const cursor = (req.query.cursor as string) || null;
 
   try {
-    // Only get spots from CollectionSpot where collection belongs to user
-    // Saved spots must be in a collection to appear in /saved
+    // Get spots from collections the user owns OR is an accepted member of
     const collectionSpots = await prisma.collectionSpot.findMany({
       where: {
         collection: {
-          userId,
+          OR: [
+            { userId },
+            { members: { some: { userId, status: "accepted" } } },
+          ],
         },
       },
       select: {
@@ -111,7 +113,9 @@ export default async function handler(
       createdAt: s.createdAt,
     }));
 
-    console.log(`[saved] Returning ${items.length} items (take=${take}, skip=${skip}, totalSaved=${savedSpotIds.length})`);
+    console.log(
+      `[saved] Returning ${items.length} items (take=${take}, skip=${skip}, totalSaved=${savedSpotIds.length})`,
+    );
 
     res.json({ items, nextCursor });
   } catch (e) {

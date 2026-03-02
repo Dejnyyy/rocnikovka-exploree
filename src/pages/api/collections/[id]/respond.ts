@@ -33,6 +33,19 @@ export default async function handler(
   if (!membership || membership.status !== "pending")
     return res.status(404).json({ error: "No pending invite found" });
 
+  // Enforce max 10 collaborators when accepting (race-condition guard)
+  if (accept) {
+    const acceptedCount = await prisma.collectionMember.count({
+      where: { collectionId, status: "accepted" },
+    });
+    if (acceptedCount >= 10)
+      return res
+        .status(400)
+        .json({
+          error: "Collection already has the maximum of 10 collaborators",
+        });
+  }
+
   const updated = await prisma.collectionMember.update({
     where: { id: membership.id },
     data: {
