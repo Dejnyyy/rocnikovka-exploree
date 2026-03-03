@@ -196,12 +196,12 @@ function MembersPanel({ collectionId }: { collectionId: string }) {
   const debounceRef = React.useRef<ReturnType<typeof setTimeout> | null>(null);
   const wrapperRef = React.useRef<HTMLDivElement>(null);
 
-  useState(() => {
+  React.useEffect(() => {
     fetch(`/api/collections/${collectionId}/members`)
       .then((r) => r.json())
       .then((d) => setMembers(d.members ?? []))
       .catch(() => {});
-  });
+  }, [collectionId]);
 
   React.useEffect(() => {
     function handleClick(e: MouseEvent) {
@@ -291,7 +291,7 @@ function MembersPanel({ collectionId }: { collectionId: string }) {
           strokeWidth="2"
           strokeLinecap="round"
           strokeLinejoin="round"
-          className="text-violet-500"
+          className="text-pink-500"
         >
           <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
           <circle cx="9" cy="7" r="4" />
@@ -309,12 +309,12 @@ function MembersPanel({ collectionId }: { collectionId: string }) {
             onChange={(e) => handleInputChange(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && inviteUser(query)}
             onFocus={() => suggestions.length > 0 && setShowDropdown(true)}
-            className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-violet-500/50"
+            className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm dark:border-zinc-700 dark:bg-zinc-900 focus:outline-none focus:ring-2 focus:ring-pink-500/50"
           />
           <button
             onClick={() => inviteUser(query)}
             disabled={inviting || !query.trim()}
-            className="rounded-lg bg-violet-600 px-4 py-2 text-sm font-medium text-white hover:bg-violet-700 disabled:opacity-50 transition-colors"
+            className="rounded-lg bg-gradient-to-r from-pink-400 to-yellow-300 px-4 py-2 text-sm font-medium text-black hover:brightness-110 disabled:opacity-50 transition-all"
           >
             {inviting ? "…" : "Invite"}
           </button>
@@ -386,7 +386,7 @@ function MembersPanel({ collectionId }: { collectionId: string }) {
               </div>
               <button
                 onClick={() => removeMember(m.user.id)}
-                className="text-xs text-red-400 hover:text-red-300 transition-colors"
+                className="text-sm text-red-400  hover:text-red-300 transition-colors"
               >
                 Remove
               </button>

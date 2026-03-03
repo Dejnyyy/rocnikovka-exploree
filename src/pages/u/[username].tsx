@@ -286,8 +286,8 @@ function FollowStatusBadge({
   if (isFriend) {
     label = "Friends";
     bgColorClass =
-      "bg-violet-100 text-violet-700 dark:bg-violet-900/30 dark:text-violet-300";
-    hoverClass = "hover:bg-violet-200 dark:hover:bg-violet-900/50";
+      "bg-pink-100 text-pink-700 dark:bg-pink-900/30 dark:text-pink-300";
+    hoverClass = "hover:bg-pink-200 dark:hover:bg-pink-900/50";
     icon = (
       <svg
         className="h-3.5 w-3.5"
@@ -347,7 +347,7 @@ function FollowStatusBadge({
 
   // Determine dot color based on state
   const dotColorClass = isFriend
-    ? "text-violet-500 dark:text-violet-400"
+    ? "text-pink-500 dark:text-pink-400"
     : shouldFollowBack
       ? "text-pink-500 dark:text-yellow-400"
       : "text-zinc-400 dark:text-zinc-500";
@@ -624,7 +624,7 @@ export default function PublicProfilePage({
                     strokeWidth="2"
                     strokeLinecap="round"
                     strokeLinejoin="round"
-                    className="text-violet-500"
+                    className="text-pink-500"
                   >
                     <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2" />
                     <circle cx="9" cy="7" r="4" />

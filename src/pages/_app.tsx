@@ -3,11 +3,17 @@ import { SessionProvider } from "next-auth/react";
 import type { Session } from "next-auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
+import { Quicksand } from "next/font/google";
 
 import "@/styles/globals.css";
 
 import { ToastContainer } from "react-toastify";
 import { GlobalLoader } from "@/context/GlobalLoader";
+
+const quicksand = Quicksand({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+});
 
 type Theme = "light" | "dark";
 
@@ -51,9 +57,11 @@ export default function App({ Component, pageProps }: AppProps) {
       session={(pageProps as { session?: Session | null })?.session}
     >
       <QueryClientProvider client={queryClient}>
-        <Component {...pageProps} />
-        <GlobalLoader />
-        <ThemeAwareToastContainer />
+        <div className={quicksand.className}>
+          <Component {...pageProps} />
+          <GlobalLoader />
+          <ThemeAwareToastContainer />
+        </div>
       </QueryClientProvider>
     </SessionProvider>
   );

@@ -83,7 +83,7 @@ export default function PeoplePage() {
       (entries) => {
         if (entries.some((e) => e.isIntersecting)) fetchNextPage();
       },
-      { rootMargin: "600px 0px" }
+      { rootMargin: "600px 0px" },
     );
 
     io.observe(el);
@@ -92,7 +92,7 @@ export default function PeoplePage() {
 
   const items = (data?.pages ?? []).reduce<Person[]>(
     (acc: Person[], p: any) => (acc.push(...p.items), acc),
-    []
+    [],
   );
 
   return (
@@ -340,10 +340,10 @@ function PersonCard({ person }: { person: Person }) {
             whileTap={!isPending ? { scale: 0.95 } : {}}
             className={`shrink-0 relative overflow-hidden px-4 py-1.5 text-xs font-medium rounded-full transition-colors ${
               isFriend
-                ? "bg-violet-100 text-violet-700 hover:bg-violet-200 dark:bg-violet-900/30 dark:text-violet-300 dark:hover:bg-violet-900/50"
+                ? "bg-pink-100 text-pink-700 hover:bg-pink-200 dark:bg-pink-900/30 dark:text-pink-300 dark:hover:bg-pink-900/50"
                 : isFollowing
-                ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
-                : "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                  ? "bg-zinc-100 text-zinc-700 hover:bg-zinc-200 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+                  : "bg-zinc-900 text-white hover:bg-zinc-800 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
             } ${isPending ? "cursor-wait" : "cursor-pointer"}`}
           >
             <AnimatePresence mode="wait">
