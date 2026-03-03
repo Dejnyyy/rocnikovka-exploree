@@ -587,7 +587,7 @@ export default function PublicProfilePage({
         {tab === "collections" ? (
           <section className="mt-6">
             <h2 className="mb-3 text-lg font-medium">
-              {isOwner ? "Collections" : "Public collections"}
+              {isOwner ? "My collections" : "Public collections"}
             </h2>
             {collections.length === 0 ? (
               <p className="text-sm text-zinc-500 dark:text-zinc-400">
