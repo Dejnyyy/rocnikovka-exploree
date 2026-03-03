@@ -1,7 +1,12 @@
 // pages/profile/index.tsx
 "use client";
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import {
+  QueryClient,
+  QueryClientProvider,
+  useMutation,
+  useQueryClient,
+} from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
 import Image from "next/image";
@@ -17,43 +22,197 @@ type ColItem = MyColsData["items"][number];
 
 import { PinCard } from "@/components/PinCard";
 
-function GridPins({ items }: { items: SpotItem[] }) {
+/* ── Confirm dialog ──────────────────────────── */
+function ConfirmDialog({
+  open,
+  title,
+  message,
+  onConfirm,
+  onCancel,
+  loading,
+}: {
+  open: boolean;
+  title: string;
+  message: React.ReactNode;
+  onConfirm: () => void;
+  onCancel: () => void;
+  loading?: boolean;
+}) {
+  if (!open) return null;
   return (
-    <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-6 [column-fill:_balance]">
-      {items.map((s) => (
-        <PinCard
-          key={s.id}
-          id={s.id}
-          slug={s.slug}
-          title={s.title}
-          mediaUrl={s.coverUrl || ""}
-          city={s.city}
-          country={s.country}
-        />
-      ))}
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 backdrop-blur-sm">
+      <div className="mx-4 w-full max-w-md rounded-2xl bg-white p-8 shadow-2xl dark:bg-zinc-900">
+        <h3 className="text-xl font-semibold mb-2">{title}</h3>
+        <div className="text-sm text-zinc-500 dark:text-zinc-400 mb-6">
+          {message}
+        </div>
+        <div className="flex gap-3 justify-end">
+          <button
+            onClick={onCancel}
+            disabled={loading}
+            className="rounded-full px-4 py-1.5 text-sm font-medium border border-zinc-300 dark:border-zinc-700 hover:bg-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+          >
+            Cancel
+          </button>
+          <button
+            onClick={onConfirm}
+            disabled={loading}
+            className="rounded-full px-4 py-1.5 text-sm font-medium bg-red-500 text-white hover:bg-red-600 disabled:opacity-50 transition-colors"
+          >
+            {loading ? "Deleting…" : "Delete"}
+          </button>
+        </div>
+      </div>
     </div>
   );
 }
 
-function GridCollections({ items }: { items: ColItem[] }) {
-  const { data: session } = useSession();
-  const username =
-    (session?.user as { username?: string } | undefined)?.username || "";
+/* ── Trash button ──────────────────────────── */
+function TrashButton({ onClick }: { onClick: (e: React.MouseEvent) => void }) {
+  return (
+    <button
+      onClick={onClick}
+      className="absolute top-2 right-2 z-10 rounded-full bg-black/50 p-1.5 text-white/80 opacity-0 group-hover:opacity-100 hover:bg-red-500 hover:text-white transition-all"
+      title="Delete"
+    >
+      <svg
+        width="14"
+        height="14"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <polyline points="3 6 5 6 21 6" />
+        <path d="M19 6v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6m3 0V4a2 2 0 012-2h4a2 2 0 012 2v2" />
+      </svg>
+    </button>
+  );
+}
+
+/* ── Spots grid with delete ──────────────────────────── */
+function GridPins({ items }: { items: SpotItem[] }) {
+  const qc = useQueryClient();
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const r = await fetch(`/api/spots/${id}`, { method: "DELETE" });
+      if (!r.ok) throw new Error(await r.text());
+    },
+    onSuccess: () => {
+      setConfirmId(null);
+      qc.invalidateQueries({ queryKey: ["me"] });
+    },
+  });
+
+  const confirmSpot = items.find((s) => s.id === confirmId);
 
   return (
-    <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-6 [column-fill:_balance]">
-      {items.map((c) => (
-        <CollectionPinCard
-          key={c.id}
-          id={c.id}
-          name={c.name}
-          slug={c.slug}
-          coverUrl={c.coverUrl}
-          count={c.count}
-          username={username}
-        />
-      ))}
-    </div>
+    <>
+      <ConfirmDialog
+        open={!!confirmId}
+        title="Delete spot?"
+        message={
+          <>
+            <span className="font-bold underline text-zinc-900 dark:text-zinc-100">
+              {confirmSpot?.title ?? "This spot"}
+            </span>{" "}
+            will be permanently removed from all collections.
+          </>
+        }
+        onConfirm={() => confirmId && deleteMut.mutate(confirmId)}
+        onCancel={() => setConfirmId(null)}
+        loading={deleteMut.isPending}
+      />
+      <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-6 [column-fill:_balance]">
+        {items.map((s) => (
+          <div key={s.id} className="relative group">
+            <TrashButton
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setConfirmId(s.id);
+              }}
+            />
+            <PinCard
+              id={s.id}
+              slug={s.slug}
+              title={s.title}
+              mediaUrl={s.coverUrl || ""}
+              city={s.city}
+              country={s.country}
+            />
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
+/* ── Collections grid with delete ──────────────────────────── */
+function GridCollections({ items }: { items: ColItem[] }) {
+  const { data: session } = useSession();
+  const qc = useQueryClient();
+  const username =
+    (session?.user as { username?: string } | undefined)?.username || "";
+  const [confirmId, setConfirmId] = useState<string | null>(null);
+
+  const deleteMut = useMutation({
+    mutationFn: async (id: string) => {
+      const r = await fetch(`/api/collections/${id}`, { method: "DELETE" });
+      if (!r.ok) throw new Error(await r.text());
+    },
+    onSuccess: () => {
+      setConfirmId(null);
+      qc.invalidateQueries({ queryKey: ["me"] });
+    },
+  });
+
+  const confirmCol = items.find((c) => c.id === confirmId);
+
+  return (
+    <>
+      <ConfirmDialog
+        open={!!confirmId}
+        title="Delete collection?"
+        message={
+          <>
+            <span className="font-bold underline text-zinc-900 dark:text-zinc-100">
+              {confirmCol?.name ?? "This collection"}
+            </span>{" "}
+            and all its memberships will be permanently deleted. The spots
+            inside will not be deleted.
+          </>
+        }
+        onConfirm={() => confirmId && deleteMut.mutate(confirmId)}
+        onCancel={() => setConfirmId(null)}
+        loading={deleteMut.isPending}
+      />
+      <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-6 [column-fill:_balance]">
+        {items.map((c) => (
+          <div key={c.id} className="relative group">
+            <TrashButton
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setConfirmId(c.id);
+              }}
+            />
+            <CollectionPinCard
+              id={c.id}
+              name={c.name}
+              slug={c.slug}
+              coverUrl={c.coverUrl}
+              count={c.count}
+              username={username}
+            />
+          </div>
+        ))}
+      </div>
+    </>
   );
 }
 

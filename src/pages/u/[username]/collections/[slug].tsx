@@ -235,7 +235,7 @@ function MembersPanel({ collectionId }: { collectionId: string }) {
   };
 
   return (
-    <div className="mt-10 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5">
+    <div className="mt-10 rounded-2xl p-5">
       <h2 className="text-lg font-semibold mb-4 flex items-center gap-2">
         <svg
           width="18"
@@ -253,7 +253,7 @@ function MembersPanel({ collectionId }: { collectionId: string }) {
           <path d="M23 21v-2a4 4 0 0 0-3-3.87" />
           <path d="M16 3.13a4 4 0 0 1 0 7.75" />
         </svg>
-        Members
+        Collaborators
       </h2>
 
       {/* Invite input with autocomplete */}
@@ -315,7 +315,9 @@ function MembersPanel({ collectionId }: { collectionId: string }) {
       {error && <p className="text-xs text-red-500 mb-3">{error}</p>}
       {success && <p className="text-xs text-emerald-500 mb-3">{success}</p>}
       {members.length === 0 ? (
-        <p className="text-sm text-zinc-400">No members yet. Invite someone!</p>
+        <p className="text-sm text-zinc-400">
+          No collaborators yet. Invite someone!
+        </p>
       ) : (
         <div className="space-y-2">
           {members.map((m) => (
