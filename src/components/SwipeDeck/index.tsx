@@ -189,7 +189,7 @@ export function SwipeDeck({
 
   return (
     <div
-      className={`relative h-[72vh] w-[min(92vw,420px)] ${className ?? ""}`}
+      className={`relative h-[72vh] w-[min(92vw,420px)] ${isDragging ? "z-20" : ""} ${className ?? ""}`}
       aria-label="Swipe deck"
     >
       <AnimatePresence initial={false} custom={exitDir ?? "left"}>
