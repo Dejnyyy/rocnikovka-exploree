@@ -1,0 +1,16 @@
+services:
+  exploree:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME: ${NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME}
+        NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET: ${NEXT_PUBLIC_CLOUDINARY_UPLOAD_PRESET}
+        NEXT_PUBLIC_CLOUDINARY_URL: ${NEXT_PUBLIC_CLOUDINARY_URL}
+    container_name: exploree
+    restart: unless-stopped
+    ports:
+      - "3080:3000"
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
