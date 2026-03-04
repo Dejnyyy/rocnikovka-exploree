@@ -102,7 +102,7 @@ function InviteCard({
   return (
     <div className="rounded-2xl border border-zinc-200 bg-white/80 backdrop-blur-sm ring-1 ring-black/5 dark:border-zinc-800 dark:bg-zinc-900/60 dark:ring-white/5 overflow-hidden">
       <div className="flex items-center justify-between gap-4 p-4">
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-3 min-w-0 flex-1">
           {invite.owner.image ? (
             <Image
               src={invite.owner.image}
@@ -118,7 +118,7 @@ function InviteCard({
                 .toUpperCase()}
             </div>
           )}
-          <div className="min-w-0">
+          <div className="min-w-0 pr-2">
             <p
               className={`${quicksand.className} text-xs tracking-wide text-zinc-400 dark:text-zinc-500`}
             >
@@ -127,62 +127,64 @@ function InviteCard({
               </span>{" "}
               invited you to
             </p>
-            <p
-              className={`${quicksand.className} text-lg font-bold truncate bg-gradient-to-r from-pink-400 to-yellow-300 bg-clip-text text-transparent`}
-            >
-              {invite.collectionName}
-            </p>
+            <div className="flex items-center gap-2">
+              <p
+                className={`${quicksand.className} text-lg font-bold truncate bg-gradient-to-r from-pink-400 to-yellow-300 bg-clip-text text-transparent`}
+              >
+                {invite.collectionName}
+              </p>
+              <button
+                onClick={togglePreview}
+                className={`rounded-full p-1.5 transition-colors shrink-0 ${
+                  previewing
+                    ? "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400"
+                    : "text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 dark:hover:text-zinc-300 dark:hover:bg-zinc-800"
+                }`}
+                title={previewing ? "Hide preview" : "Preview collection"}
+              >
+                <svg
+                  className="h-4 w-4"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  {previewing ? (
+                    <>
+                      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
+                      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
+                      <line x1="1" y1="1" x2="23" y2="23" />
+                    </>
+                  ) : (
+                    <>
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
+                      <circle cx="12" cy="12" r="3" />
+                    </>
+                  )}
+                </svg>
+              </button>
+            </div>
             <span
-              className={`${quicksand.className} inline-flex items-center gap-1 rounded-full bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-0.5`}
+              className={`${quicksand.className} inline-flex items-center gap-1 rounded-full bg-zinc-100 dark:bg-zinc-800 px-2 py-0.5 text-[11px] font-medium text-zinc-500 dark:text-zinc-400 mt-1`}
             >
               {invite.spotCount} spots
             </span>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0">
-          <button
-            onClick={togglePreview}
-            className={`rounded-full p-3 transition-colors ${
-              previewing
-                ? "bg-amber-100 text-amber-600 dark:bg-amber-900/40 dark:text-amber-400"
-                : "text-zinc-400 hover:text-zinc-600 hover:bg-zinc-100 dark:hover:text-zinc-300 dark:hover:bg-zinc-800"
-            }`}
-            title={previewing ? "Hide preview" : "Preview collection"}
-          >
-            <svg
-              className="h-5 w-5"
-              viewBox="0 0 24 24"
-              fill="none"
-              stroke="currentColor"
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              {previewing ? (
-                <>
-                  <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-                  <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-                  <line x1="1" y1="1" x2="23" y2="23" />
-                </>
-              ) : (
-                <>
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-                  <circle cx="12" cy="12" r="3" />
-                </>
-              )}
-            </svg>
-          </button>
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2 shrink-0 sm:w-auto w-1/3 min-w-[100px]">
           <button
             onClick={() => respond(true)}
             disabled={loading}
-            className="rounded-xl bg-gradient-to-r from-pink-400 to-yellow-300 px-4 py-2 text-sm font-semibold text-black shadow-md hover:shadow-lg hover:brightness-110 disabled:opacity-60 transition-all"
+            className="w-full sm:w-auto rounded-xl bg-gradient-to-r from-pink-400 to-yellow-300 px-4 py-2 sm:py-2 text-sm font-semibold text-black shadow-md hover:shadow-lg hover:brightness-110 disabled:opacity-60 transition-all"
           >
             Accept
           </button>
           <button
             onClick={() => respond(false)}
             disabled={loading}
-            className="rounded-xl border border-zinc-300 bg-white px-4 py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-60 transition-colors dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
+            className="w-full sm:w-auto rounded-xl border border-zinc-300 bg-white px-4 py-2 sm:py-2 text-sm font-semibold text-zinc-700 hover:bg-zinc-50 disabled:opacity-60 transition-colors dark:border-zinc-700 dark:bg-zinc-800 dark:text-zinc-300 dark:hover:bg-zinc-700"
           >
             Decline
           </button>

@@ -8,7 +8,7 @@ import {
   useQueryClient,
 } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Image from "next/image";
 import HeaderWithMenu from "@/components/HeaderWithMenu";
 import { useMySpots, useMyCollections } from "@/hooks/me";
@@ -223,6 +223,14 @@ function ProfileOverviewInner() {
   const spotsQ = useMySpots();
   const colsQ = useMyCollections();
 
+  const [inviteCount, setInviteCount] = useState(0);
+  useEffect(() => {
+    fetch("/api/me/invites")
+      .then((r) => r.json())
+      .then((d) => setInviteCount((d.invites ?? []).length))
+      .catch(() => {});
+  }, []);
+
   return (
     <main className="mx-auto max-w-7xl px-4 sm:px-8 py-8 pb-32 md:pb-8 md:ml-72 pt-28">
       <div className="w-full">
@@ -258,6 +266,36 @@ function ProfileOverviewInner() {
             Edit profile
           </Link>
         </div>
+
+        {inviteCount > 0 && (
+          <Link
+            href="/invites"
+            className="mb-6 flex items-center justify-between rounded-2xl bg-amber-500/10 px-4 py-3 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400 ring-1 ring-amber-500/20 hover:bg-amber-500/20 transition-colors"
+          >
+            <div className="flex items-center gap-3">
+              <svg
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M15 17h5l-1.405-1.405A2.032 2.032 0 0118 14.158V11a6.002 6.002 0 00-4-5.659V5a2 2 0 10-4 0v.341C7.67 6.165 6 8.388 6 11v3.159c0 .538-.214 1.055-.595 1.436L4 17h5m6 0v1a3 3 0 11-6 0v-1m6 0H9"
+                />
+              </svg>
+              <span className="text-sm font-medium">
+                You have {inviteCount} pending collection{" "}
+                {inviteCount === 1 ? "invite" : "invites"}
+              </span>
+            </div>
+            <span className="text-sm font-semibold underline underline-offset-2">
+              View
+            </span>
+          </Link>
+        )}
 
         <div className="mb-4 flex gap-2">
           {(["Spots", "Collections"] as const).map((t) => (

@@ -285,6 +285,18 @@ export function SaveToCollectionSheet({
 
             {/* create & save */}
             <div className="mt-4 flex flex-col gap-2">
+              <AnimatePresence>
+                {newCollectionName.length >= 32 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="text-xs text-red-500 font-medium px-1"
+                  >
+                    Maximum length is 32 characters
+                  </motion.div>
+                )}
+              </AnimatePresence>
               <div className="flex gap-2">
                 <input
                   id="__new_collection_name"
@@ -321,18 +333,6 @@ export function SaveToCollectionSheet({
                   {createAndSaveMut.isPending ? "Saving…" : "Create & Save"}
                 </button>
               </div>
-              <AnimatePresence>
-                {newCollectionName.length >= 32 && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    exit={{ opacity: 0, height: 0 }}
-                    className="text-xs text-red-500 font-medium px-1"
-                  >
-                    Maximum length is 32 characters
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </div>
           </motion.div>
         </>

@@ -14,6 +14,33 @@ type HeaderProps = {
   emailFallback?: string;
 };
 
+function MobileInvitesLink({ onClose }: { onClose: () => void }) {
+  const [count, setCount] = useState(0);
+  useEffect(() => {
+    fetch("/api/me/invites")
+      .then((r) => r.json())
+      .then((d) => setCount((d.invites ?? []).length))
+      .catch(() => {});
+  }, []);
+  if (count === 0) return null;
+  return (
+    <>
+      <div className="border-t border-zinc-200 dark:border-zinc-800 my-1" />
+      <Link
+        href="/invites"
+        role="menuitem"
+        className="flex items-center justify-between px-3 py-2 hover:bg-zinc-100 dark:hover:bg-zinc-800"
+        onClick={onClose}
+      >
+        <span>Invites</span>
+        <div className="flex h-5 min-w-5 items-center justify-center rounded-full bg-amber-500 px-1.5 text-xs font-bold text-white">
+          {count}
+        </div>
+      </Link>
+    </>
+  );
+}
+
 type Theme = "light" | "dark";
 
 export default function HeaderWithMenu({
@@ -182,7 +209,7 @@ export default function HeaderWithMenu({
                   Profile
                 </Link>
 
-                <div className="border-t border-zinc-200 dark:border-zinc-800 my-1" />
+                <MobileInvitesLink onClose={() => setOpen(false)} />
 
                 <div className="px-3 py-2" role="group" aria-label="Theme">
                   <div className="pb-2 text-[11px] uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
