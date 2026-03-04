@@ -332,6 +332,15 @@ export default function Sidebar({
 
           <ThemeSwitcher />
         </nav>
+
+        <div className="mt-auto px-6 pb-4 pt-2">
+          <Link
+            href="/privacy"
+            className="text-[11px] text-zinc-400 dark:text-zinc-500 hover:text-zinc-700 dark:hover:text-zinc-300 underline underline-offset-2 transition-colors"
+          >
+            Privacy Policy
+          </Link>
+        </div>
       </div>
     </aside>
   );

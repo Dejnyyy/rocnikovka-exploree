@@ -21,7 +21,8 @@ export default withAuth(
     const username = token?.username;
     const hasUsername =
       typeof username === "string" && username.trim().length > 0;
-    if (!hasUsername && !isOnboarding) {
+    const isPrivacy = pathname.startsWith("/privacy");
+    if (!hasUsername && !isOnboarding && !isPrivacy) {
       return NextResponse.redirect(new URL("/onboarding", req.url));
     }
     return NextResponse.next();

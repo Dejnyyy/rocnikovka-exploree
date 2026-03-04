@@ -101,6 +101,12 @@ export default function Home() {
               Continue with Google
             </button>
           </div>
+          <Link
+            href="/privacy"
+            className="mt-4 text-xs text-zinc-500 dark:text-zinc-400 hover:text-zinc-900 dark:hover:text-zinc-100 underline underline-offset-2 transition-colors"
+          >
+            Privacy Policy
+          </Link>
         </div>
       </div>
     );
