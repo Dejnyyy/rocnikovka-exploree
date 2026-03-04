@@ -293,8 +293,8 @@ function SwipeCard({
 }) {
   const x = useMotionValue(0);
   const rotate = useTransform(x, [-240, 0, 240], [-16, 0, 16]);
-  const likeOpacity = useTransform(x, [40, 140], [0, 1]);
-  const skipOpacity = useTransform(x, [-140, -40], [1, 0]);
+  const likeOpacity = useTransform(x, [20, 80], [0, 1]);
+  const skipOpacity = useTransform(x, [-80, -20], [1, 0]);
   const ref = useRef<HTMLDivElement>(null);
 
   // Drag controls: image is the handle
@@ -350,9 +350,11 @@ function SwipeCard({
       onDragEnd={(_, info) => {
         onDragChange?.(false);
         const w = ref.current?.offsetWidth ?? 400;
-        const threshold = w * 0.35;
+        // Lower threshold on mobile (narrower screens) for easier swiping
+        const isMobile = w < 400;
+        const threshold = w * (isMobile ? 0.18 : 0.3);
         const byDistance = Math.abs(x.get()) > threshold;
-        const byVelocity = Math.abs(info.velocity.x) > 800;
+        const byVelocity = Math.abs(info.velocity.x) > (isMobile ? 300 : 600);
         if (byDistance || byVelocity) {
           const dir = x.get() > 0 ? "right" : "left";
           setLocalExitDir(dir);
