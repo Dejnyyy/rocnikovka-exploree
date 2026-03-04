@@ -9,7 +9,7 @@ services:
     container_name: exploree
     restart: unless-stopped
     ports:
-      - "3080:3000"
+      - "3002:3000"
     env_file:
       - .env
     environment:
