@@ -333,7 +333,7 @@ function SwipeCard({
       drag="x"
       dragControls={dragControls}
       dragListener={false}
-      dragElastic={0.7}
+      dragElastic={(ref.current?.offsetWidth ?? 500) < 400 ? 0.7 : 0.25}
       exit="exit"
       variants={variants}
       dragMomentum={false}
