@@ -100,8 +100,8 @@ model Spot {
 
 model Collection {
   id        String           @id @default(cuid()) @db.VarChar(25)
-  name      String           @db.VarChar(100)
-  slug      String           @db.VarChar(100)
+  name      String           @db.VarChar(32)
+  slug      String           @db.VarChar(50)
   userId    String           @db.VarChar(25)
   user      User             @relation("UserCollections", fields: [userId], references: [id])
   spots     CollectionSpot[]

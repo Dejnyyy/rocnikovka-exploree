@@ -156,6 +156,7 @@ export function SaveToCollectionSheet({
   const qc = useQueryClient();
   const { data } = useMyCollectionsLite();
   const [query, setQuery] = useState("");
+  const [newCollectionName, setNewCollectionName] = useState("");
 
   // add spot to existing collection
   const addMut = useMutation({
@@ -283,37 +284,55 @@ export function SaveToCollectionSheet({
             </div>
 
             {/* create & save */}
-            <div className="mt-4 flex gap-2">
-              <input
-                id="__new_collection_name"
-                placeholder="New collection name"
-                className="flex-1 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none dark:border-zinc-700 dark:bg-zinc-950"
-                onKeyDown={(e) => {
-                  if (e.key === "Enter" && spot) {
-                    const name = (
-                      e.currentTarget as HTMLInputElement
-                    ).value.trim();
-                    if (name) {
-                      createAndSaveMut.mutate({ name, spotId: spot.id });
+            <div className="mt-4 flex flex-col gap-2">
+              <div className="flex gap-2">
+                <input
+                  id="__new_collection_name"
+                  placeholder="New collection name"
+                  maxLength={32}
+                  value={newCollectionName}
+                  onChange={(e) => setNewCollectionName(e.target.value)}
+                  className="flex-1 rounded-xl border border-zinc-300 bg-white px-3 py-2 text-sm outline-none dark:border-zinc-700 dark:bg-zinc-950"
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && spot) {
+                      const name = newCollectionName.trim();
+                      if (name) {
+                        createAndSaveMut.mutate({ name, spotId: spot.id });
+                        setNewCollectionName("");
+                      }
                     }
+                  }}
+                />
+                <button
+                  disabled={
+                    createAndSaveMut.isPending ||
+                    !spot ||
+                    !newCollectionName.trim()
                   }
-                }}
-              />
-              <button
-                disabled={createAndSaveMut.isPending || !spot}
-                onClick={() => {
-                  const el = document.getElementById(
-                    "__new_collection_name",
-                  ) as HTMLInputElement | null;
-                  const name = el?.value?.trim();
-                  if (name && spot) {
-                    createAndSaveMut.mutate({ name, spotId: spot.id });
-                  }
-                }}
-                className="rounded-xl bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
-              >
-                {createAndSaveMut.isPending ? "Saving…" : "Create & Save"}
-              </button>
+                  onClick={() => {
+                    const name = newCollectionName.trim();
+                    if (name && spot) {
+                      createAndSaveMut.mutate({ name, spotId: spot.id });
+                      setNewCollectionName("");
+                    }
+                  }}
+                  className="rounded-xl bg-zinc-900 px-4 py-2 text-sm text-white hover:bg-zinc-800 disabled:opacity-50 dark:bg-zinc-100 dark:text-zinc-900 dark:hover:bg-zinc-200"
+                >
+                  {createAndSaveMut.isPending ? "Saving…" : "Create & Save"}
+                </button>
+              </div>
+              <AnimatePresence>
+                {newCollectionName.length >= 32 && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    exit={{ opacity: 0, height: 0 }}
+                    className="text-xs text-red-500 font-medium px-1"
+                  >
+                    Maximum length is 32 characters
+                  </motion.div>
+                )}
+              </AnimatePresence>
             </div>
           </motion.div>
         </>

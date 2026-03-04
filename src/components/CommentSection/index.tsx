@@ -2,6 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useSession } from "next-auth/react";
 import Image from "next/image";
+import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
 
 type Comment = {
@@ -167,7 +168,23 @@ export default function CommentSection({
               >
                 {/* Avatar */}
                 <div className="flex-shrink-0 pt-0.5">
-                  {c.user.image ? (
+                  {c.user.username ? (
+                    <Link href={`/u/${c.user.username}`}>
+                      {c.user.image ? (
+                        <Image
+                          src={c.user.image}
+                          alt={c.user.name ?? "User"}
+                          width={36}
+                          height={36}
+                          className="rounded-full hover:opacity-80 transition-opacity"
+                        />
+                      ) : (
+                        <div className="h-9 w-9 rounded-full bg-zinc-200 dark:bg-zinc-700 flex items-center justify-center text-[12px] font-medium text-zinc-600 dark:text-zinc-300 hover:opacity-80 transition-opacity">
+                          {(c.user.name ?? "U").charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                    </Link>
+                  ) : c.user.image ? (
                     <Image
                       src={c.user.image}
                       alt={c.user.name ?? "User"}
@@ -185,9 +202,18 @@ export default function CommentSection({
                 {/* Content */}
                 <div className="flex-1 min-w-0">
                   <div className="flex items-baseline gap-1.5">
-                    <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate">
-                      {c.user.name ?? `@${c.user.username}`}
-                    </span>
+                    {c.user.username ? (
+                      <Link
+                        href={`/u/${c.user.username}`}
+                        className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate hover:underline"
+                      >
+                        {c.user.name ?? `@${c.user.username}`}
+                      </Link>
+                    ) : (
+                      <span className="text-sm font-semibold text-zinc-800 dark:text-zinc-200 truncate">
+                        {c.user.name ?? `@${c.user.username}`}
+                      </span>
+                    )}
                     <span className="text-[11px] text-zinc-400 dark:text-zinc-500 flex-shrink-0">
                       {timeAgo(c.createdAt)}
                     </span>

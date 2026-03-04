@@ -23,6 +23,8 @@ export default async function handler(
     };
     const trimmed = (name ?? "").trim();
     if (!trimmed) return res.status(400).json({ error: "Missing name" });
+    if (trimmed.length > 32)
+      return res.status(400).json({ error: "Name too long (max 32 chars)" });
 
     const slug = trimmed
       .toLowerCase()
@@ -30,7 +32,7 @@ export default async function handler(
       .replace(/[\u0300-\u036f]/g, "")
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "")
-      .slice(0, 60);
+      .slice(0, 50);
 
     try {
       const result = await prisma.$transaction(async (tx) => {
