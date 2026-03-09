@@ -6,12 +6,12 @@ export default withAuth(
   (req) => {
     const token = req.nextauth?.token as { username?: string } | null;
     const { pathname, search } = req.nextUrl;
-    const isHome = pathname.startsWith("/");
+    const isHome = pathname === "/";
     const isOnboarding = pathname.startsWith("/onboarding");
     // Not logged in -> /home
     if (!token) {
       if (!isHome) {
-        const url = new URL("/home", req.url);
+        const url = new URL("/", req.url);
         url.searchParams.set("next", pathname + search);
         return NextResponse.redirect(url);
       }

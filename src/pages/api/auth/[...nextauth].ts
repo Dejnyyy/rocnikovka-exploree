@@ -29,7 +29,11 @@ export const authOptions: NextAuthOptions = {
       return true;
     },
     // ⬇️ JWT carries id + username
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      if (trigger === "update" && session?.username) {
+        token.username = session.username;
+      }
+
       const email = user?.email ?? token.email;
       if (!email) return token;
       const dbUser = await prisma.user.findUnique({

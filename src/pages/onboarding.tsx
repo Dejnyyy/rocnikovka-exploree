@@ -184,7 +184,7 @@ export default function OnboardingPage() {
         const j = await res.json().catch(() => ({}));
         throw new Error(j.error ?? "Failed to set username");
       }
-      await update();
+      await update({ username });
       router.push(`/u/${username}`);
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
