@@ -63,6 +63,7 @@ export type Spot = {
     image?: string | null;
     username?: string | null;
   } | null;
+  exploreReason?: string;
 };
 
 type SwipeDeckProps = {
@@ -198,15 +199,12 @@ export function SwipeDeck({
           <motion.div
             key={`${next.id}-bg`}
             className="absolute inset-0 rounded-3xl border border-white/10 bg-white/5 overflow-hidden"
-            initial={{ scale: 0.995, y: 8, opacity: 0.6 }}
+            initial={{ scale: 0.995, y: 8, opacity: 0.6, filter: "blur(16px)" }}
             animate={{
               scale: 0.995,
               y: 8,
               opacity: 1,
-              filter:
-                isDragging || cardTilt > 0
-                  ? `blur(${Math.min(8, cardTilt / 12)}px)`
-                  : "blur(0px)",
+              filter: "blur(16px)",
             }}
             transition={{ filter: { duration: 0.15 } }}
             exit={{ opacity: 0 }}
@@ -364,8 +362,9 @@ function SwipeCard({
           x.set(0);
         }
       }}
-      initial={{ opacity: 1, scale: 0.995, y: 8 }}
-      animate={{ opacity: 1, scale: 1, y: 0 }}
+      initial={{ opacity: 1, scale: 0.995, y: 8, filter: "blur(16px)" }}
+      animate={{ opacity: 1, scale: 1, y: 0, filter: "blur(0px)" }}
+      transition={{ filter: { delay: 0.2, duration: 0.3 } }}
       custom={finalExitDir}
     >
       <CardFace

@@ -20,6 +20,7 @@ type Pin = {
   likes: number;
   comments: number;
   tags?: string[] | undefined;
+  exploreReason?: string;
 };
 
 export default async function handler(
@@ -74,6 +75,12 @@ export default async function handler(
     const results: any[] = [];
     let remainingLimit = limit;
 
+    console.log(
+      `\n--- [EXPLORE API] New Request for user: ${userId || "Anonymous"} ---`,
+    );
+    console.log(`- Requested Limit: ${limit}`);
+    console.log(`- Seen IDs count: ${seenIds.length}`);
+
     const baseExclude = userId
       ? {
           authorId: { not: userId },
@@ -117,10 +124,20 @@ export default async function handler(
           take: tagTarget,
         });
 
-        results.push(...tagSpots);
+        console.log(
+          `[Tier 1: Tags] Target: ${tagTarget}, Found: ${tagSpots.length}`,
+          tagSpots.map((s) => s.title),
+        );
+        const enriched = tagSpots.map((s) => ({
+          ...s,
+          exploreReason: "🎯 Vybráno algoritmem podle tvých zájmů",
+        }));
+        results.push(...enriched);
         remainingLimit -= tagSpots.length;
         tagSpots.forEach((s) => seenIds.push(s.id));
         baseWhere.id = { notIn: seenIds };
+      } else {
+        console.log(`[Tier 1: Tags] Skipped - No recent saves with tags`);
       }
 
       // 2. Following (30%)
@@ -141,10 +158,22 @@ export default async function handler(
             take: Math.min(followTarget, remainingLimit),
           });
 
-          results.push(...followSpots);
+          console.log(
+            `[Tier 2: Followings] Target: ${followTarget}, Found: ${followSpots.length}`,
+            followSpots.map((s) => s.title),
+          );
+          const enriched = followSpots.map((s) => ({
+            ...s,
+            exploreReason: "👥 Přidáno někým, koho sleduješ",
+          }));
+          results.push(...enriched);
           remainingLimit -= followSpots.length;
           followSpots.forEach((s) => seenIds.push(s.id));
           baseWhere.id = { notIn: seenIds };
+        } else {
+          console.log(
+            `[Tier 2: Followings] Skipped - User doesn't follow anyone`,
+          );
         }
       }
     }
@@ -162,7 +191,15 @@ export default async function handler(
         take: Math.min(discoveryTarget, remainingLimit),
       });
 
-      results.push(...discoverySpots);
+      console.log(
+        `[Tier 3: Discovery] Target: ${discoveryTarget}, Found: ${discoverySpots.length}`,
+        discoverySpots.map((s) => s.title),
+      );
+      const enriched = discoverySpots.map((s) => ({
+        ...s,
+        exploreReason: "🌍 Úplně nové místo k prozkoumání",
+      }));
+      results.push(...enriched);
       remainingLimit -= discoverySpots.length;
       discoverySpots.forEach((s) => seenIds.push(s.id));
     }
@@ -185,9 +222,21 @@ export default async function handler(
       const shuffled = recycledSpots.sort(() => 0.5 - Math.random());
       const selected = shuffled.slice(0, remainingLimit);
 
-      results.push(...selected);
+      console.log(
+        `[Tier 4: Recycled] Needed: ${remainingLimit}, Found: ${selected.length}`,
+        selected.map((s) => s.title),
+      );
+      const enriched = selected.map((s) => ({
+        ...s,
+        exploreReason: "♻️ Recyklované nebo dříve viděné místo",
+      }));
+      results.push(...enriched);
       remainingLimit -= selected.length;
     }
+
+    console.log(
+      `--- [EXPLORE API END] Total Returned: ${results.length} ---\n`,
+    );
 
     const items = formatSpots(results);
 
@@ -245,6 +294,7 @@ function formatSpots(slice: any[]): Pin[] {
       likes: s._count.likes ?? 0,
       comments: 0,
       tags,
+      exploreReason: s.exploreReason,
     };
   });
 }

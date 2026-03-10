@@ -32,6 +32,7 @@ type Spot = {
     image?: string | null;
     username?: string | null;
   } | null;
+  exploreReason?: string;
 };
 
 // API response types
@@ -45,6 +46,7 @@ type ExplorePin = {
     avatar: string;
     handle?: string;
   };
+  exploreReason?: string;
 };
 type ExploreResponse = {
   items: ExplorePin[];
@@ -197,6 +199,7 @@ function AuthedHome() {
               username: p.user.handle ?? null,
             }
           : null,
+        exploreReason: p.exploreReason,
       };
     });
 
@@ -260,7 +263,19 @@ function AuthedHome() {
                     fetchNextPage();
                   }
                 }}
-                onCardChange={(s) => setCurrentSpotId(s?.id ?? null)}
+                onCardChange={(s) => {
+                  setCurrentSpotId(s?.id ?? null);
+                  if (s) {
+                    console.log(
+                      `%c[Explore Deck] 📍 ${s.title}`,
+                      "color: #ff00ff; font-weight: bold; font-size: 14px;",
+                    );
+                    console.log(
+                      `%c   -> ${s.exploreReason || "Neznámý (starý formát nebo fallback)"}`,
+                      "color: #00ffff; font-style: italic;",
+                    );
+                  }
+                }}
               />
             )}
           </div>
