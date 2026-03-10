@@ -289,7 +289,7 @@ export default function SpotDetailPage({
                       key={i}
                       className="rounded-full bg-zinc-100 px-2.5 py-1 text-xs sm:text-sm text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
                     >
-                      #{tag}
+                      {tag}
                     </span>
                   ))}
                 </div>

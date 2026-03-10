@@ -70,6 +70,7 @@ export default function DiscoverPage() {
   const [isLoading, setIsLoading] = useState(false);
   const [hasMore, setHasMore] = useState(true);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
+  const fetchLockRef = useRef(false);
 
   // Track opened cards (for mobile/tap)
   const [open, setOpen] = useState<Set<string>>(new Set());
@@ -112,26 +113,31 @@ export default function DiscoverPage() {
   }, [cursor, hasMore, isLoading]);
 
   async function loadMore(reset = false) {
-    if (isLoading || (!hasMore && !reset)) return;
+    if (fetchLockRef.current || (!hasMore && !reset)) return;
+    fetchLockRef.current = true;
     setIsLoading(true);
-    const params = new URLSearchParams();
-    if (cursor && !reset) params.set("cursor", cursor);
-    params.set("limit", "48");
-    if (debouncedQuery) params.set("q", debouncedQuery);
-    if (activeTag && activeTag !== "all") params.set("tag", activeTag);
 
-    const res = await fetch(`/api/explore?${params.toString()}`);
-    if (!res.ok) {
-      console.error("Explore API failed", await res.text());
+    try {
+      const params = new URLSearchParams();
+      if (cursor && !reset) params.set("cursor", cursor);
+      params.set("limit", "48");
+      if (debouncedQuery) params.set("q", debouncedQuery);
+      if (activeTag && activeTag !== "all") params.set("tag", activeTag);
+
+      const res = await fetch(`/api/explore?${params.toString()}`);
+      if (!res.ok) {
+        console.error("Explore API failed", await res.text());
+        return;
+      }
+      const data: ExploreResponse = await res.json();
+
+      setPins((prev) => (reset ? data.items : [...prev, ...data.items]));
+      setCursor(data.nextCursor);
+      setHasMore(Boolean(data.nextCursor));
+    } finally {
+      fetchLockRef.current = false;
       setIsLoading(false);
-      return;
     }
-    const data: ExploreResponse = await res.json();
-
-    setPins((prev) => (reset ? data.items : [...prev, ...data.items]));
-    setCursor(data.nextCursor);
-    setHasMore(Boolean(data.nextCursor));
-    setIsLoading(false);
   }
 
   // instant client filter
