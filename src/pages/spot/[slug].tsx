@@ -518,16 +518,15 @@ export default function SpotDetailPage({
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.9, opacity: 0 }}
                 transition={{ type: "spring", damping: 25, stiffness: 300 }}
-                className="relative w-full h-full max-w-[95vw] max-h-[95vh] flex items-center justify-center"
-                onClick={(e) => e.stopPropagation()}
+                className="relative flex items-center justify-center p-4 sm:p-8"
+                onClick={() => setIsImageFullscreen(false)}
               >
-                <Image
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img
                   src={spot.coverUrl || spot.image}
                   alt={spot.title}
-                  fill
-                  className="object-contain"
-                  priority
-                  sizes="100vw"
+                  className="max-w-full sm:max-w-[90vw] max-h-[85vh] object-contain rounded-2xl shadow-2xl cursor-auto"
+                  onClick={(e) => e.stopPropagation()}
                 />
               </motion.div>
             </motion.div>
