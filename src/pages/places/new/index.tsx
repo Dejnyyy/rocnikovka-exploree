@@ -92,10 +92,9 @@ function MapLocationPickerInner({
       if (lat && lng) {
         marker.setLngLat([lng, lat]).addTo(map);
       } else {
-        // Set initial position to map center
-        const center = map.getCenter();
-        marker.setLngLat(center).addTo(map);
-        onLocationSelect(center.lat, center.lng);
+        // Just set coordinates so the internal Maplibre lngLat object isn't undefined,
+        // but DO NOT addTo(map) yet.
+        marker.setLngLat(map.getCenter());
       }
 
       markerRef.current = marker;
@@ -105,6 +104,11 @@ function MapLocationPickerInner({
       const handleMapClick = (e: any) => {
         if (!isLocked) {
           const { lng, lat } = e.lngLat;
+
+          // Ensure it's rendered on the map
+          if (!marker.getElement().parentNode) {
+            marker.addTo(map);
+          }
           marker.setLngLat([lng, lat]);
           onLocationSelect(lat, lng);
         }
@@ -136,6 +140,9 @@ function MapLocationPickerInner({
   // Update marker position when lat/lng changes externally
   useEffect(() => {
     if (mapRef.current && markerRef.current && lat && lng && isMapLoaded) {
+      if (!markerRef.current.getElement().parentNode) {
+        markerRef.current.addTo(mapRef.current);
+      }
       markerRef.current.setLngLat([lng, lat]);
       mapRef.current.setCenter([lng, lat]);
       // Update draggable state
@@ -295,6 +302,8 @@ function CreatePlaceInner() {
   const searchResultsRef = useRef<HTMLDivElement | null>(null);
   const previewRef = useRef<HTMLDivElement | null>(null);
 
+  const reverseGeocodeTimeoutRef = useRef<NodeJS.Timeout | null>(null);
+
   const canUpload = useMemo(() => CLOUD_NAME && UPLOAD_PRESET, []);
 
   // Suggested tags
@@ -411,7 +420,7 @@ function CreatePlaceInner() {
 
     setIsSearching(true);
     try {
-      const params = new URLSearchParams({ query: query.trim(), limit: "10" });
+      const params = new URLSearchParams({ query: query.trim(), limit: "50" });
 
       // Try to extract location from query (e.g., "Central Park, New York")
       // or use country/city if available
@@ -419,6 +428,9 @@ function CreatePlaceInner() {
         params.set("near", country);
       } else if (city) {
         params.set("near", city);
+      } else if (lat && lng) {
+        params.set("lat", lat);
+        params.set("lng", lng);
       }
 
       const res = await fetch(`/api/foursquare/search?${params.toString()}`);
@@ -504,16 +516,44 @@ function CreatePlaceInner() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [searchQuery]);
 
-  // Auto-fill from coordinates when both are entered
+  // Auto-fill from coordinates when map pin is moved
   useEffect(() => {
-    if (lat && lng && !selectedPlace) {
-      const timeout = setTimeout(() => {
-        void autoFillFromCoords(lat, lng);
-      }, 1000);
-      return () => clearTimeout(timeout);
+    // Only reverse geocode if user is manually picking location (not locked to a place)
+    if (!lat || !lng || isLocationLocked) return;
+
+    if (reverseGeocodeTimeoutRef.current) {
+      clearTimeout(reverseGeocodeTimeoutRef.current);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lat, lng]);
+
+    reverseGeocodeTimeoutRef.current = setTimeout(async () => {
+      try {
+        const acceptLanguage =
+          typeof navigator !== "undefined" ? navigator.language : "en-US";
+        const res = await fetch(
+          `/api/foursquare/reverse-geocode?lat=${lat}&lng=${lng}`,
+          {
+            headers: {
+              "Accept-Language": acceptLanguage,
+            },
+          },
+        );
+        if (res.ok) {
+          const data = await res.json();
+          // Update conditionally so we don't overwrite user's intentional input
+          if (data.city) setCity(data.city);
+          if (data.country) setCountry(data.country);
+        }
+      } catch (error) {
+        console.error("Reverse geocode failed", error);
+      }
+    }, 1000); // Wait 1s after they stop dragging pin
+
+    return () => {
+      if (reverseGeocodeTimeoutRef.current) {
+        clearTimeout(reverseGeocodeTimeoutRef.current);
+      }
+    };
+  }, [lat, lng, isLocationLocked]);
 
   // Handle place selection
   const handleSelectPlace = (place: FoursquarePlace) => {
@@ -580,15 +620,13 @@ function CreatePlaceInner() {
 
     // Basic validation to match schema
     if (!title.trim()) return toast.error("Title is required");
-    const latNum = parseFloat(lat);
-    const lngNum = parseFloat(lng);
-    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) {
-      return toast.error("Latitude and Longitude are required");
-    }
-    if (latNum < -90 || latNum > 90) {
+    const latNum = lat ? parseFloat(lat) : undefined;
+    const lngNum = lng ? parseFloat(lng) : undefined;
+
+    if (latNum !== undefined && (latNum < -90 || latNum > 90)) {
       return toast.error("Latitude must be between -90 and 90");
     }
-    if (lngNum < -180 || lngNum > 180) {
+    if (lngNum !== undefined && (lngNum < -180 || lngNum > 180)) {
       return toast.error("Longitude must be between -180 and 180");
     }
     if (!publicId && !imgUrl) return toast.error("Please upload an image");
@@ -883,6 +921,102 @@ function CreatePlaceInner() {
                   </div>
                 )}
               </section>
+
+              {/* Location */}
+              <div className="grid gap-3">
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium">
+                    Location (Optional)
+                  </label>
+                  <button
+                    type="button"
+                    onClick={() => setShowMapPicker(!showMapPicker)}
+                    className="text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
+                  >
+                    {showMapPicker
+                      ? "Enter coordinates manually"
+                      : "Hide manual coordinates"}
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <MapLocationPicker
+                    lat={lat ? parseFloat(lat) : undefined}
+                    lng={lng ? parseFloat(lng) : undefined}
+                    isLocked={isLocationLocked}
+                    onLocationSelect={(selectedLat, selectedLng) => {
+                      setLat(selectedLat.toString());
+                      setLng(selectedLng.toString());
+                      // Unlock if user manually changes location
+                      if (isLocationLocked) {
+                        setIsLocationLocked(false);
+                        setSelectedPlace(null);
+                      }
+                    }}
+                    onUnlock={() => {
+                      setIsLocationLocked(false);
+                      setSelectedPlace(null);
+                    }}
+                  />
+                  {lat && lng && (
+                    <p className="text-xs text-zinc-500 dark:text-zinc-400">
+                      Selected: {parseFloat(lat).toFixed(6)},{" "}
+                      {parseFloat(lng).toFixed(6)}
+                    </p>
+                  )}
+                </div>
+
+                {showMapPicker && (
+                  <div className="grid gap-2 sm:grid-cols-2 mt-2 pt-4 border-t border-zinc-100 dark:border-zinc-800">
+                    <div className="grid gap-2">
+                      <label
+                        htmlFor="lat"
+                        className="text-xs text-zinc-500 dark:text-zinc-400"
+                      >
+                        Latitude
+                      </label>
+                      <input
+                        id="lat"
+                        type="number"
+                        step="any"
+                        value={lat}
+                        onChange={(e) => {
+                          setLat(e.target.value);
+                          if (isLocationLocked) {
+                            setIsLocationLocked(false);
+                            setSelectedPlace(null);
+                          }
+                        }}
+                        className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 outline-none focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-600"
+                        placeholder="e.g. 40.741"
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <label
+                        htmlFor="lng"
+                        className="text-xs text-zinc-500 dark:text-zinc-400"
+                      >
+                        Longitude
+                      </label>
+                      <input
+                        id="lng"
+                        type="number"
+                        step="any"
+                        value={lng}
+                        onChange={(e) => {
+                          setLng(e.target.value);
+                          if (isLocationLocked) {
+                            setIsLocationLocked(false);
+                            setSelectedPlace(null);
+                          }
+                        }}
+                        className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 outline-none focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-600"
+                        placeholder="-73.99"
+                      />
+                    </div>
+                  </div>
+                )}
+              </div>
               <div className="grid gap-2">
                 <label htmlFor="title" className="text-sm font-medium">
                   Title *
@@ -942,93 +1076,6 @@ function CreatePlaceInner() {
                     placeholder="e.g. USA"
                   />
                 </div>
-              </div>
-
-              {/* Location */}
-              <div className="grid gap-3">
-                <label className="text-sm font-medium">Location *</label>
-
-                {showMapPicker ? (
-                  <div className="space-y-2">
-                    <MapLocationPicker
-                      lat={lat ? parseFloat(lat) : undefined}
-                      lng={lng ? parseFloat(lng) : undefined}
-                      isLocked={isLocationLocked}
-                      onLocationSelect={(selectedLat, selectedLng) => {
-                        setLat(selectedLat.toString());
-                        setLng(selectedLng.toString());
-                        // Unlock if user manually changes location
-                        if (isLocationLocked) {
-                          setIsLocationLocked(false);
-                          setSelectedPlace(null);
-                        }
-                      }}
-                      onUnlock={() => {
-                        setIsLocationLocked(false);
-                        setSelectedPlace(null);
-                      }}
-                    />
-                    {lat && lng && (
-                      <p className="text-xs text-zinc-500 dark:text-zinc-400">
-                        Selected: {parseFloat(lat).toFixed(6)},{" "}
-                        {parseFloat(lng).toFixed(6)}
-                      </p>
-                    )}
-                  </div>
-                ) : (
-                  <div className="grid gap-2 sm:grid-cols-2">
-                    <div className="grid gap-2">
-                      <label
-                        htmlFor="lat"
-                        className="text-xs text-zinc-500 dark:text-zinc-400"
-                      >
-                        Latitude *
-                      </label>
-                      <input
-                        id="lat"
-                        type="number"
-                        step="any"
-                        value={lat}
-                        onChange={(e) => {
-                          setLat(e.target.value);
-                          // Unlock if user manually changes coordinates
-                          if (isLocationLocked) {
-                            setIsLocationLocked(false);
-                            setSelectedPlace(null);
-                          }
-                        }}
-                        className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 outline-none focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-600"
-                        placeholder="e.g. 40.741"
-                        required
-                      />
-                    </div>
-                    <div className="grid gap-2">
-                      <label
-                        htmlFor="lng"
-                        className="text-xs text-zinc-500 dark:text-zinc-400"
-                      >
-                        Longitude *
-                      </label>
-                      <input
-                        id="lng"
-                        type="number"
-                        step="any"
-                        value={lng}
-                        onChange={(e) => {
-                          setLng(e.target.value);
-                          // Unlock if user manually changes coordinates
-                          if (isLocationLocked) {
-                            setIsLocationLocked(false);
-                            setSelectedPlace(null);
-                          }
-                        }}
-                        className="w-full rounded-xl border border-zinc-300 bg-white px-3 py-2 outline-none focus:border-zinc-400 dark:border-zinc-700 dark:bg-zinc-900 dark:focus:border-zinc-600"
-                        placeholder="-73.99"
-                        required
-                      />
-                    </div>
-                  </div>
-                )}
               </div>
 
               {/* Tags with chips */}
@@ -1101,9 +1148,7 @@ function CreatePlaceInner() {
                   !title.trim() ||
                   (!imgUrl && !publicId) ||
                   uploading ||
-                  isSubmitting ||
-                  !lat ||
-                  !lng
+                  isSubmitting
                 }
               >
                 {isSubmitting
@@ -1117,7 +1162,7 @@ function CreatePlaceInner() {
                 onClick={(e) => {
                   e.preventDefault();
                   e.stopPropagation();
-                  if (title.trim() && lat && lng) {
+                  if (title.trim()) {
                     setShowPreview(!showPreview);
                     // Scroll to preview after state update
                     setTimeout(() => {
@@ -1127,11 +1172,11 @@ function CreatePlaceInner() {
                       });
                     }, 100);
                   } else {
-                    toast.error("Please fill in title and location to preview");
+                    toast.error("Please fill in a title to preview");
                   }
                 }}
                 className="rounded-full px-5 py-3 text-sm border border-zinc-300 hover:bg-zinc-100 dark:border-zinc-700 dark:hover:bg-zinc-800 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-                disabled={!title.trim() || !lat || !lng}
+                disabled={!title.trim()}
               >
                 Preview
               </button>

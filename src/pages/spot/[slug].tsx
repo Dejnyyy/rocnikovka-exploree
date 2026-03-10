@@ -13,6 +13,7 @@ import {
 } from "@/components/SaveToCollectionSheet";
 import CommentSection from "@/components/CommentSection";
 import { CommentSheet } from "@/components/CommentSheet";
+import { motion, AnimatePresence } from "framer-motion";
 
 export const getServerSideProps: GetServerSideProps = async (ctx) => {
   const slug = (ctx.params?.slug as string | undefined) ?? "";
@@ -124,6 +125,7 @@ export default function SpotDetailPage({
   const [pickerOpen, setPickerOpen] = useState(false);
   const [showBurst, setShowBurst] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
+  const [isImageFullscreen, setIsImageFullscreen] = useState(false);
 
   const viewerName =
     (session?.user?.name as string) ??
@@ -182,7 +184,18 @@ export default function SpotDetailPage({
           {/* Main image and content */}
           <div className="lg:col-span-8 space-y-4 sm:space-y-6">
             {/* Image */}
-            <div className="relative aspect-video w-full overflow-hidden rounded-2xl">
+            <div
+              className={`relative aspect-video w-full overflow-hidden rounded-2xl ${
+                spot.coverUrl || spot.image
+                  ? "cursor-pointer hover:opacity-95 transition-opacity"
+                  : ""
+              }`}
+              onClick={() => {
+                if (spot.coverUrl || spot.image) {
+                  setIsImageFullscreen(true);
+                }
+              }}
+            >
               {spot.coverUrl || spot.image ? (
                 <Image
                   src={spot.coverUrl || spot.image}
@@ -471,6 +484,55 @@ export default function SpotDetailPage({
 
         {/* Success burst */}
         <SaveBurst show={showBurst} />
+
+        {/* Fullscreen Image Viewer */}
+        <AnimatePresence>
+          {isImageFullscreen && (spot.coverUrl || spot.image) && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[100] flex items-center justify-center bg-black/90 backdrop-blur-sm"
+              onClick={() => setIsImageFullscreen(false)}
+            >
+              <button
+                className="absolute top-4 right-4 sm:top-6 sm:right-6 p-2 rounded-full bg-black/50 text-white/70 hover:text-white hover:bg-black/70 transition-colors z-[101]"
+                onClick={() => setIsImageFullscreen(false)}
+              >
+                <svg
+                  className="h-6 w-6 sm:h-8 sm:w-8"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={2}
+                    d="M6 18L18 6M6 6l12 12"
+                  />
+                </svg>
+              </button>
+              <motion.div
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                exit={{ scale: 0.9, opacity: 0 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className="relative w-full h-full max-w-[95vw] max-h-[95vh] flex items-center justify-center"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <Image
+                  src={spot.coverUrl || spot.image}
+                  alt={spot.title}
+                  fill
+                  className="object-contain"
+                  priority
+                  sizes="100vw"
+                />
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </main>
     </div>
   );

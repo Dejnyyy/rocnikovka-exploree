@@ -116,13 +116,16 @@ export default async function handler(
 
       for (const authFormat of authFormats) {
         try {
-          response = await fetch(apiUrl, {
-            headers: {
-              Accept: "application/json",
-              Authorization: authFormat,
-              "X-Places-Api-Version": "1970-01-01",
-            },
-          });
+          const headers: Record<string, string> = {
+            Accept: "application/json",
+            Authorization: authFormat,
+            "X-Places-Api-Version": "1970-01-01",
+          };
+          if (req.headers["accept-language"]) {
+            headers["Accept-Language"] = req.headers["accept-language"];
+          }
+
+          response = await fetch(apiUrl, { headers });
 
           if (response.ok) {
             break; // Success, exit loop
@@ -169,11 +172,14 @@ export default async function handler(
       const apiUrl = `https://api.foursquare.com/v2/venues/search?${params.toString()}`;
 
       try {
-        response = await fetch(apiUrl, {
-          headers: {
-            Accept: "application/json",
-          },
-        });
+        const headers: Record<string, string> = {
+          Accept: "application/json",
+        };
+        if (req.headers["accept-language"]) {
+          headers["Accept-Language"] = req.headers["accept-language"];
+        }
+
+        response = await fetch(apiUrl, { headers });
 
         if (!response.ok) {
           const errorText = await response.text();
