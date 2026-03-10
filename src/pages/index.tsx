@@ -51,12 +51,29 @@ type ExploreResponse = {
   nextCursor: string | null;
 };
 
+type ExplorePageParam = {
+  cursor?: string;
+  seenIds?: string[];
+};
+
 // Fetcher for paginated API - optimalizováno pro velké množství dat
 // Načítáme menší dávky (15 spotů) pro lepší výkon a dynamické fetchování
-async function fetchExplorePage(cursor?: string): Promise<ExploreResponse> {
+async function fetchExplorePage(
+  pageParam?: ExplorePageParam,
+): Promise<ExploreResponse> {
   const params = new URLSearchParams({ limit: "15" });
-  if (cursor) params.set("cursor", cursor);
-  const res = await fetch(`/api/explore?${params.toString()}`);
+  if (pageParam?.cursor) params.set("cursor", pageParam.cursor);
+
+  const res = await fetch(`/api/explore?${params.toString()}`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      seenIds: pageParam?.seenIds ?? [],
+    }),
+  });
+
   if (!res.ok) throw new Error(await res.text());
   return res.json();
 }
@@ -135,13 +152,24 @@ function AuthedHome() {
     Error,
     InfiniteData<ExploreResponse>,
     (string | { limit: number })[],
-    string | undefined
+    ExplorePageParam | undefined
   >({
     queryKey: ["explore", { limit: 15 }],
-    queryFn: ({ pageParam }: { pageParam: string | undefined }) =>
-      fetchExplorePage(pageParam),
+    queryFn: ({ pageParam }) => fetchExplorePage(pageParam),
     initialPageParam: undefined, // ✅ required in v5
-    getNextPageParam: (lastPage) => lastPage.nextCursor ?? undefined,
+    getNextPageParam: (lastPage, allPages) => {
+      // Collect all IDs we've seen so far across all paginated batches
+      const allSeenIds = allPages.flatMap((p) => p.items.map((i) => i.id));
+
+      // If the API returns exactly 0 items, we stop requesting automatically
+      // But if it returned anything, we can always try to ask for more recycled spots
+      if (lastPage.items.length === 0) return undefined;
+
+      return {
+        cursor: lastPage.nextCursor ?? undefined,
+        seenIds: allSeenIds,
+      };
+    },
     staleTime: 30_000,
   });
 
