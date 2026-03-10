@@ -1,7 +1,6 @@
 "use client";
 import { useEffect, useRef, useState, useMemo } from "react";
 import Head from "next/head";
-import Image from "next/image";
 import Link from "next/link";
 import { useSession } from "next-auth/react";
 import { Search } from "lucide-react";
@@ -72,15 +71,6 @@ export default function DiscoverPage() {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchLockRef = useRef(false);
 
-  // Track opened cards (for mobile/tap)
-  const [open, setOpen] = useState<Set<string>>(new Set());
-  const toggleOpen = (id: string) =>
-    setOpen((prev) => {
-      const next = new Set(prev);
-      next.has(id) ? next.delete(id) : next.add(id);
-      return next;
-    });
-
   // Debounce the query to prevent flashing on every keystroke
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -94,8 +84,8 @@ export default function DiscoverPage() {
     setPins([]);
     setCursor(null);
     setHasMore(true);
-    setOpen(new Set());
     void loadMore(true);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery, activeTag]);
 
@@ -110,6 +100,7 @@ export default function DiscoverPage() {
     );
     io.observe(target);
     return () => io.unobserve(target);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [cursor, hasMore, isLoading]);
 
   async function loadMore(reset = false) {

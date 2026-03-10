@@ -53,11 +53,11 @@ export default async function handler(
         { title: { contains: q } },
         { city: { contains: q } },
         { country: { contains: q } },
-        { tags: { array_contains: q.toLowerCase() } },
+        { tags: { array_contains: q.toLowerCase() } as any },
       ];
     }
     if (tag) {
-      where.tags = { array_contains: tag };
+      where.tags = { array_contains: tag } as any;
     }
     const results = await prisma.spot.findMany({
       where,
@@ -112,8 +112,8 @@ export default async function handler(
       }
 
       if (userTags.size > 0 && remainingLimit > 0) {
-        // Prisma JSON array_contains doesn't support IN nicely, so we use OR
-        const conditions = Array.from(userTags).map((t) => ({
+        // Prisma string array uses string search because schema is LongText
+        const conditions: any[] = Array.from(userTags).map((t) => ({
           tags: { array_contains: t },
         }));
 

@@ -456,45 +456,6 @@ function CreatePlaceInner() {
     }
   };
 
-  // Auto-fill from coordinates
-  const autoFillFromCoords = async (latVal: string, lngVal: string) => {
-    const latNum = parseFloat(latVal);
-    const lngNum = parseFloat(lngVal);
-    if (!Number.isFinite(latNum) || !Number.isFinite(lngNum)) return;
-
-    try {
-      const params = new URLSearchParams({
-        lat: latNum.toString(),
-        lng: lngNum.toString(),
-        limit: "1",
-      });
-      const res = await fetch(`/api/foursquare/search?${params.toString()}`);
-      const data = await res.json();
-      if (res.ok && data.results && data.results.length > 0) {
-        const place = data.results[0];
-        // Only auto-fill if fields are empty
-        if (!title && place.name) setTitle(place.name);
-        if (!city && place.city) setCity(place.city);
-        if (!country && place.country) setCountry(place.country);
-        if (!description && place.description) {
-          setDescription(place.description);
-        }
-        if (tags.length === 0 && place.primaryCategory) {
-          setTags([place.primaryCategory.toLowerCase()]);
-        }
-        if (!imgUrl && place.photo) {
-          setImgUrl(place.photo);
-        }
-      } else if (res.status === 503) {
-        // API not available - silent fail for auto-fill
-        // User can still fill manually
-      }
-    } catch (error) {
-      // Silent fail for auto-fill
-      console.error("Auto-fill error:", error);
-    }
-  };
-
   // Handle search input with debounce
   useEffect(() => {
     if (searchTimeoutRef.current) {
