@@ -185,7 +185,10 @@ export default function OnboardingPage() {
         throw new Error(j.error ?? "Failed to set username");
       }
       await update({ username });
-      router.push(`/u/${username}`);
+      // Hard navigation to ensure the browser uses the fresh JWT cookie
+      // (router.push can race with the cookie update, causing middleware
+      // to still see the old token without username)
+      window.location.href = `/u/${username}`;
     } catch (err: unknown) {
       setError(err instanceof Error ? err.message : "Something went wrong");
       setLoadingSubmit(false);
