@@ -71,6 +71,16 @@ export default function DiscoverPage() {
   const sentinelRef = useRef<HTMLDivElement | null>(null);
   const fetchLockRef = useRef(false);
 
+  // Keep refs in sync so loadMore always reads the latest values
+  const activeTagRef = useRef(activeTag);
+  activeTagRef.current = activeTag;
+  const debouncedQueryRef = useRef(debouncedQuery);
+  debouncedQueryRef.current = debouncedQuery;
+  const cursorRef = useRef(cursor);
+  cursorRef.current = cursor;
+  const hasMoreRef = useRef(hasMore);
+  hasMoreRef.current = hasMore;
+
   // Debounce the query to prevent flashing on every keystroke
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -84,8 +94,12 @@ export default function DiscoverPage() {
     setPins([]);
     setCursor(null);
     setHasMore(true);
-    void loadMore(true);
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Use a small timeout to let state settle before fetching
+    const t = setTimeout(() => {
+      fetchLockRef.current = false; // release any stale lock
+      void loadMore(true);
+    }, 0);
+    return () => clearTimeout(t);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [debouncedQuery, activeTag]);
 
@@ -104,16 +118,17 @@ export default function DiscoverPage() {
   }, [cursor, hasMore, isLoading]);
 
   async function loadMore(reset = false) {
-    if (fetchLockRef.current || (!hasMore && !reset)) return;
+    if (fetchLockRef.current || (!hasMoreRef.current && !reset)) return;
     fetchLockRef.current = true;
     setIsLoading(true);
 
     try {
       const params = new URLSearchParams();
-      if (cursor && !reset) params.set("cursor", cursor);
+      if (cursorRef.current && !reset) params.set("cursor", cursorRef.current);
       params.set("limit", "48");
-      if (debouncedQuery) params.set("q", debouncedQuery);
-      if (activeTag && activeTag !== "all") params.set("tag", activeTag);
+      if (debouncedQueryRef.current) params.set("q", debouncedQueryRef.current);
+      if (activeTagRef.current && activeTagRef.current !== "all")
+        params.set("tag", activeTagRef.current);
 
       const res = await fetch(`/api/explore?${params.toString()}`);
       if (!res.ok) {

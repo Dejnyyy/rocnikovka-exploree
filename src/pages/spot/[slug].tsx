@@ -126,6 +126,7 @@ export default function SpotDetailPage({
   const [showBurst, setShowBurst] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [isImageFullscreen, setIsImageFullscreen] = useState(false);
+  const [commentRefreshKey, setCommentRefreshKey] = useState(0);
 
   const viewerName =
     (session?.user?.name as string) ??
@@ -460,7 +461,11 @@ export default function SpotDetailPage({
             )}
 
             {/* Comments - desktop */}
-            <CommentSection spotId={spot.id} className="max-h-[400px]" />
+            <CommentSection
+              spotId={spot.id}
+              className="max-h-[400px]"
+              refreshKey={commentRefreshKey}
+            />
           </div>
         </div>
 
@@ -480,6 +485,7 @@ export default function SpotDetailPage({
           open={commentsOpen}
           spotId={spot.id}
           onClose={() => setCommentsOpen(false)}
+          onCommentPosted={() => setCommentRefreshKey((k) => k + 1)}
         />
 
         {/* Success burst */}

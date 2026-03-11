@@ -25,6 +25,10 @@ export default withAuth(
     if (!hasUsername && !isOnboarding && !isPrivacy) {
       return NextResponse.redirect(new URL("/onboarding", req.url));
     }
+    // Already onboarded → kick out of /onboarding
+    if (hasUsername && isOnboarding) {
+      return NextResponse.redirect(new URL(`/u/${username}`, req.url));
+    }
     return NextResponse.next();
   },
   { callbacks: { authorized: () => true } },

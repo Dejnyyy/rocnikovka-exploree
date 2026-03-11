@@ -53,11 +53,11 @@ export default async function handler(
         { title: { contains: q } },
         { city: { contains: q } },
         { country: { contains: q } },
-        { tags: { array_contains: q.toLowerCase() } as any },
+        { tags: { contains: q.toLowerCase() } },
       ];
     }
     if (tag) {
-      where.tags = { array_contains: tag } as any;
+      where.tags = { contains: tag };
     }
     const results = await prisma.spot.findMany({
       where,
@@ -106,15 +106,24 @@ export default async function handler(
 
       const userTags = new Set<string>();
       for (const s of recentSaves) {
+        let parsedTags: string[] = [];
         if (Array.isArray(s.spot.tags)) {
-          s.spot.tags.forEach((t) => userTags.add(String(t).toLowerCase()));
+          parsedTags = s.spot.tags.map((t) => String(t));
+        } else if (typeof s.spot.tags === "string" && s.spot.tags.length > 0) {
+          try {
+            const p = JSON.parse(s.spot.tags);
+            if (Array.isArray(p)) parsedTags = p.map((t: unknown) => String(t));
+          } catch {
+            /* ignore */
+          }
         }
+        parsedTags.forEach((t) => userTags.add(t.toLowerCase()));
       }
 
       if (userTags.size > 0 && remainingLimit > 0) {
         // Prisma string array uses string search because schema is LongText
         const conditions: any[] = Array.from(userTags).map((t) => ({
-          tags: { array_contains: t },
+          tags: { contains: t },
         }));
 
         const tagSpots = await prisma.spot.findMany({
@@ -272,9 +281,19 @@ function formatSpots(slice: any[]): Pin[] {
     const location =
       [s.city, s.country].filter(Boolean).join(", ") || undefined;
 
-    const tags = Array.isArray(s.tags)
-      ? (s.tags as unknown as string[]).map((t) => String(t))
-      : undefined;
+    let tags: string[] | undefined;
+    if (Array.isArray(s.tags)) {
+      tags = s.tags.map((t: unknown) => String(t));
+    } else if (typeof s.tags === "string" && s.tags.length > 0) {
+      try {
+        const parsed = JSON.parse(s.tags);
+        tags = Array.isArray(parsed)
+          ? parsed.map((t: unknown) => String(t))
+          : undefined;
+      } catch {
+        tags = undefined;
+      }
+    }
 
     return {
       id: s.id,

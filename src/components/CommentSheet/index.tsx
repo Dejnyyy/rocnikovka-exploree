@@ -7,10 +7,12 @@ export function CommentSheet({
   open,
   spotId,
   onClose,
+  onCommentPosted,
 }: {
   open: boolean;
   spotId: string;
   onClose: () => void;
+  onCommentPosted?: () => void;
 }) {
   return (
     <AnimatePresence>
@@ -60,6 +62,7 @@ export function CommentSheet({
             <CommentSection
               spotId={spotId}
               className="h-[70vh] flex flex-col"
+              onCommentPosted={onCommentPosted}
             />
           </motion.div>
         </>

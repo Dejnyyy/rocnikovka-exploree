@@ -33,9 +33,13 @@ function timeAgo(dateStr: string): string {
 export default function CommentSection({
   spotId,
   className = "",
+  refreshKey = 0,
+  onCommentPosted,
 }: {
   spotId: string;
   className?: string;
+  refreshKey?: number;
+  onCommentPosted?: () => void;
 }) {
   const { data: session } = useSession();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -44,7 +48,7 @@ export default function CommentSection({
   const [loading, setLoading] = useState(true);
   const listRef = useRef<HTMLDivElement>(null);
 
-  // Fetch comments
+  // Fetch comments (re-fetches when refreshKey changes)
   useEffect(() => {
     if (!spotId) return;
     setLoading(true);
@@ -53,7 +57,7 @@ export default function CommentSection({
       .then((d) => setComments(d.comments ?? []))
       .catch(console.error)
       .finally(() => setLoading(false));
-  }, [spotId]);
+  }, [spotId, refreshKey]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -69,6 +73,7 @@ export default function CommentSection({
       const { comment } = await res.json();
       setComments((prev) => [comment, ...prev]);
       setText("");
+      onCommentPosted?.();
       // Scroll to top of list to show the new comment
       listRef.current?.scrollTo({ top: 0, behavior: "smooth" });
     } catch (err) {
