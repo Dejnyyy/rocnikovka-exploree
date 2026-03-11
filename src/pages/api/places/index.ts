@@ -104,9 +104,7 @@ export default async function handler(
         // store original URL as coverUrl if you have it (handy for clients)
         coverUrl: imageUrl || null,
         image, // Cloudinary public_id preferred; falls back to url
-        tags: Array.isArray(tags)
-          ? (tags as unknown as Prisma.JsonArray)
-          : ([] as unknown as Prisma.JsonArray),
+        tags: Array.isArray(tags) ? JSON.stringify(tags) : "[]",
         authorId,
       },
       select: { id: true, slug: true },

@@ -96,7 +96,7 @@ export default async function handler(
           country: country ?? null,
           coverUrl: coverUrl ?? null,
           image, // required by schema
-          tags: Array.isArray(tags) ? tags : undefined, // expects Json
+          tags: Array.isArray(tags) ? JSON.stringify(tags) : "[]",
           authorId,
         },
         select: {
