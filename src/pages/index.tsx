@@ -204,6 +204,7 @@ function AuthedHome() {
     });
 
   const [currentSpotId, setCurrentSpotId] = useState<string | null>(null);
+  const [commentRefreshKey, setCommentRefreshKey] = useState(0);
 
   const queryClient = useQueryClient();
   const saveMut = useMutation({
@@ -276,6 +277,7 @@ function AuthedHome() {
                     );
                   }
                 }}
+                onCommentPosted={() => setCommentRefreshKey((k) => k + 1)}
               />
             )}
           </div>
@@ -287,6 +289,7 @@ function AuthedHome() {
                 key={currentSpotId}
                 spotId={currentSpotId}
                 className="flex-1 min-h-0"
+                refreshKey={commentRefreshKey}
               />
             </div>
           )}

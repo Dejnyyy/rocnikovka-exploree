@@ -72,6 +72,7 @@ type SwipeDeckProps = {
   onSkip: (s: Spot) => Promise<void> | void; // left
   onEmpty?: () => void;
   onCardChange?: (spot: Spot | null) => void;
+  onCommentPosted?: () => void;
   className?: string;
 };
 
@@ -81,6 +82,7 @@ export function SwipeDeck({
   onSkip,
   onEmpty,
   onCardChange,
+  onCommentPosted,
   className,
 }: SwipeDeckProps) {
   const [index, setIndex] = useState(0);
@@ -270,6 +272,7 @@ export function SwipeDeck({
         open={commentsOpen}
         spotId={commentSpotId ?? ""}
         onClose={() => setCommentsOpen(false)}
+        onCommentPosted={onCommentPosted}
       />
     </div>
   );

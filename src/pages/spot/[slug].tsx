@@ -102,7 +102,18 @@ export const getServerSideProps: GetServerSideProps = async (ctx) => {
       spot: {
         ...spot,
         createdAt: spot.createdAt.toISOString(),
-        tags: Array.isArray(spot.tags) ? spot.tags : [],
+        tags: (() => {
+          if (Array.isArray(spot.tags)) return spot.tags;
+          if (typeof spot.tags === "string" && spot.tags.length > 0) {
+            try {
+              const p = JSON.parse(spot.tags);
+              return Array.isArray(p) ? p : [];
+            } catch {
+              return [];
+            }
+          }
+          return [];
+        })(),
         _count: {
           ...spot._count,
           saves: totalSaves,
