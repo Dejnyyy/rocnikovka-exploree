@@ -34,7 +34,7 @@ Exploree je moderní webová aplikace pro vytváření, sdílení a objevování
 
 ### 📚 Kolekce
 
-- Vytvárej tematické sbírky míst (např. "Nejlepší kavárny v Praze")
+- Vytvářej tematické sbírky míst (např. "Nejlepší kavárny v Praze")
 - Veřejné i soukromé kolekce
 - Sdílení kolekcí s přáteli
 
