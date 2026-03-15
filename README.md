@@ -14,9 +14,9 @@ Exploree je moderní webová aplikace pro vytváření, sdílení a objevování
 
 ## ✨ Hlavní funkce
 
-### 🌍 Interaktivní mapa
+### 🌍 Interaktivní mapas
 
-- Vybírej místa na plně interaktivní mapě pomocí Mapbox/MapLibre
+- Vybírej místa na interaktivní mapě pomocí Mapbox/MapLibre
 - Zobrazuj místa v okolí nebo na celém světě
 - Plynulé animace a gesta pro intuitivní navigaci
 
@@ -29,7 +29,7 @@ Exploree je moderní webová aplikace pro vytváření, sdílení a objevování
 ### 👥 Sociální funkce
 
 - Sleduj ostatní uživatele a objevuj jejich oblíbená místa
-- Lajkuj a ukládej místa do sbírek
+- Ukládej místa do sbírek
 - Zaznamenávej své návštěvy s poznámkami
 
 ### 📚 Kolekce
