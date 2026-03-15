@@ -26,7 +26,8 @@ export default function Custom404() {
           <div className="space-y-2">
             <h2 className="text-2xl font-semibold">Lost your way?</h2>
             <p className="text-zinc-500 dark:text-zinc-400">
-              The place you are looking for doesn't exist or has been moved.
+              The place you are looking for doesn&apos;t exist or has been
+              moved.
             </p>
           </div>
 
