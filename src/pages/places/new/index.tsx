@@ -895,8 +895,8 @@ function CreatePlaceInner() {
                     className="text-xs text-blue-500 hover:text-blue-600 dark:text-blue-400 dark:hover:text-blue-300 transition-colors"
                   >
                     {showMapPicker
-                      ? "Enter coordinates manually"
-                      : "Hide manual coordinates"}
+                      ? "Hide manual coordinates"
+                      : "Enter coordinates manually"}
                   </button>
                 </div>
 
