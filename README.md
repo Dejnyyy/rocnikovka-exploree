@@ -16,7 +16,7 @@ Exploree je moderní webová aplikace pro vytváření, sdílení a objevování
 
 ### 🌍 Interaktivní mapa
 
-- Prozkoumávej místa na plně interaktivní mapě pomocí Mapbox/MapLibre
+- Vybírej místa na plně interaktivní mapě pomocí Mapbox/MapLibre
 - Zobrazuj místa v okolí nebo na celém světě
 - Plynulé animace a gesta pro intuitivní navigaci
 
@@ -158,8 +158,10 @@ Otevři [http://localhost:3000](http://localhost:3000) v prohlížeči.
 src/
 ├── components/     # Znovupoužitelné UI komponenty
 ├── context/        # React Context providers
+├── generated/      # Vygenerované soubory
 ├── hooks/          # Custom React hooks
 ├── lib/            # Utility funkce a konfigurace
+├── middleware.ts   # Ochrana obsahu a přesměrování
 ├── pages/          # Next.js stránky a API routes
 ├── styles/         # Globální CSS styly
 └── types/          # TypeScript definice
@@ -175,18 +177,6 @@ src/
 | `npm run build` | Vytvoří produkční build            |
 | `npm run start` | Spustí produkční server            |
 | `npm run lint`  | Zkontroluje kód pomocí ESLint      |
-
----
-
-## 🚀 Deployment
-
-Aplikaci lze snadno nasadit na [Vercel](https://vercel.com):
-
-1. Propoj repozitář s Vercel
-2. Nastav environment proměnné
-3. Deploy! 🎉
-
-Pro další možnosti viz [Next.js Deployment Documentation](https://nextjs.org/docs/pages/building-your-application/deploying).
 
 ---
 
