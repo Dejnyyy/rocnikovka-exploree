@@ -14,118 +14,94 @@ function shuffleArray<T>(array: T[]): T[] {
 }
 
 /**
- * Custom hook that manages infinite swiping with random order
- * - Optimized for large datasets (10k+ spots)
- * - Uses sliding window to limit memory usage
- * - Dynamically fetches spots as needed
- * - Shuffles spots randomly from available pool
+ * Custom hook that manages infinite swiping with random order.
+ *
+ * How it works:
+ *  - `spots` from the parent (react-query pages) are the *full* flat list
+ *    returned by all fetched pages so far.
+ *  - We keep a `queueRef` of spots waiting to be shown, and a `displayedSpots`
+ *    array that SwipeDeck renders from.
+ *  - When spots arrive we add genuinely new ones to the queue (deduped).
+ *  - When SwipeDeck calls `onEmpty`, we pull the next batch from the queue,
+ *    shuffle it, and append it to displayedSpots.
+ *  - If the queue is running low, we call `onFetchMore` to ask the parent for
+ *    more data from the API (which sends `seenIds` to avoid server-side dupes).
  */
 export function useInfiniteShuffledSpots(
   spots: Spot[],
   onFetchMore?: () => void,
   batchSize: number = 20,
-  maxPoolSize: number = 200 // Maximální velikost poolu pro optimalizaci paměti
 ) {
-  // Sliding window pool - udržujeme jen omezený počet spotů v paměti
-  const poolRef = useRef<Spot[]>([]);
+  // Queue of unseen spots ready to be shown next
+  const queueRef = useRef<Spot[]>([]);
+  // Set of all IDs we have ever ingested (from API pages)
+  const knownIdsRef = useRef<Set<string>>(new Set());
+  // Displayed spots – what SwipeDeck renders
   const [displayedSpots, setDisplayedSpots] = useState<Spot[]>([]);
-  const isReshufflingRef = useRef(false);
   const initializedRef = useRef(false);
-  const seenIdsRef = useRef<Set<string>>(new Set()); // Track co už jsme viděli
+  const isReshufflingRef = useRef(false);
 
-  // Helper: Maintain sliding window - remove oldest spots when pool gets too large
-  const maintainPoolSize = useCallback(
-    (newSpots: Spot[]) => {
-      // Add new spots to pool
-      poolRef.current = [...poolRef.current, ...newSpots];
-
-      // Track seen IDs
-      newSpots.forEach((spot) => seenIdsRef.current.add(spot.id));
-
-      // If pool exceeds max size, remove oldest spots (sliding window)
-      if (poolRef.current.length > maxPoolSize) {
-        const toRemove = poolRef.current.length - maxPoolSize;
-        poolRef.current = poolRef.current.slice(toRemove);
-      }
-    },
-    [maxPoolSize]
-  );
-
-  // When new spots arrive from API, add them to pool
+  // ------- Ingest new spots from API into the queue -------
   useEffect(() => {
     if (spots.length === 0) return;
 
-    const isInitialLoad = !initializedRef.current;
-
-    // Filter out spots we've already seen
-    const newSpots = spots.filter((s) => !seenIdsRef.current.has(s.id));
-
-    if (newSpots.length > 0) {
-      // Add to pool with sliding window management
-      maintainPoolSize(newSpots);
-    } else if (isInitialLoad && spots.length > 0) {
-      // Initial load - add all spots
-      maintainPoolSize(spots);
+    // Find spots we haven't ingested yet
+    const fresh: Spot[] = [];
+    for (const s of spots) {
+      if (!knownIdsRef.current.has(s.id)) {
+        knownIdsRef.current.add(s.id);
+        fresh.push(s);
+      }
     }
 
-    // Only create initial batch on first load
-    if (isInitialLoad && poolRef.current.length > 0) {
-      // ALWAYS shuffle on initial load to ensure random order
-      const shuffled = shuffleArray(poolRef.current);
-      // Start with a larger initial batch to avoid immediate preloading
-      const initialBatch = shuffled.slice(
+    if (fresh.length > 0) {
+      queueRef.current.push(...fresh);
+    }
+
+    // First load → immediately show an initial batch
+    if (!initializedRef.current && queueRef.current.length > 0) {
+      const shuffled = shuffleArray(queueRef.current);
+      const initialBatch = shuffled.splice(
         0,
-        Math.min(batchSize * 3, shuffled.length)
+        Math.min(batchSize * 3, shuffled.length),
       );
+      queueRef.current = shuffled; // remainder stays in queue
       setDisplayedSpots(initialBatch);
       initializedRef.current = true;
-    }
-  }, [spots, batchSize, maintainPoolSize]);
 
-  // Preload next batch when running low
-  const preloadNextBatch = useCallback(() => {
-    // If pool is empty or very low, fetch more from API
-    if (poolRef.current.length < batchSize) {
-      if (onFetchMore) {
+      // Pre-fetch more if the queue is already low
+      if (queueRef.current.length < batchSize && onFetchMore) {
         onFetchMore();
       }
-      // Still try to use what we have
-      if (poolRef.current.length === 0) {
-        return;
-      }
     }
+  }, [spots, batchSize, onFetchMore]);
 
+  // ------- Pull next batch from the queue (called by SwipeDeck.onEmpty) -------
+  const getNextBatch = useCallback(() => {
     if (isReshufflingRef.current) return;
     isReshufflingRef.current = true;
 
-    // Use requestAnimationFrame to ensure smooth updates
     requestAnimationFrame(() => {
-      // Shuffle only the current pool (not all 10k spots!)
-      const shuffled = shuffleArray(poolRef.current);
-      const nextBatch = shuffled.slice(
-        0,
-        Math.min(batchSize * 2, shuffled.length)
-      );
-
-      // Append to existing spots - allow cycling through spots infinitely
-      setDisplayedSpots((prev) => {
-        // Get the last few spots to avoid immediate repeats
-        const recentIds = new Set(prev.slice(-batchSize).map((s) => s.id));
-        // Filter out spots that were just shown (to avoid immediate repeats)
-        const filteredBatch = nextBatch.filter((s) => !recentIds.has(s.id));
-
-        // If all spots were recently shown, just use the shuffled batch anyway
-        // This ensures infinite cycling
-        const spotsToAdd = filteredBatch.length > 0 ? filteredBatch : nextBatch;
-
-        return [...prev, ...spotsToAdd];
-      });
-
-      // Fetch more spots from API if pool is getting low
-      // Dynamicky fetchujeme když máme málo spotů v poolu
-      if (poolRef.current.length < batchSize * 2 && onFetchMore) {
+      // Ask for more data if the queue is low
+      if (queueRef.current.length < batchSize * 2 && onFetchMore) {
         onFetchMore();
       }
+
+      if (queueRef.current.length === 0) {
+        // Nothing in queue — can't do anything until API responds
+        isReshufflingRef.current = false;
+        return;
+      }
+
+      // Shuffle the queue and grab a batch
+      const shuffled = shuffleArray(queueRef.current);
+      const nextBatch = shuffled.splice(
+        0,
+        Math.min(batchSize * 2, shuffled.length),
+      );
+      queueRef.current = shuffled; // put the rest back
+
+      setDisplayedSpots((prev) => [...prev, ...nextBatch]);
 
       setTimeout(() => {
         isReshufflingRef.current = false;
@@ -133,39 +109,10 @@ export function useInfiniteShuffledSpots(
     });
   }, [batchSize, onFetchMore]);
 
-  // Get next batch when current one is exhausted (called by SwipeDeck's onEmpty)
-  const getNextBatch = useCallback(() => {
-    // Always preload more spots when onEmpty is called
-    // This ensures smooth infinite scrolling
-    preloadNextBatch();
-  }, [preloadNextBatch]);
-
-  // Proactively preload when displayed spots are getting low
-  // This ensures we always have spots ready before the user reaches the end
-  useEffect(() => {
-    // Only preload if we have spots but the displayed list is getting short
-    // This keeps a healthy buffer without causing infinite loops
-    if (
-      displayedSpots.length > 0 &&
-      displayedSpots.length < batchSize * 2 &&
-      poolRef.current.length > 0 &&
-      !isReshufflingRef.current
-    ) {
-      // Use a small delay to avoid immediate re-triggering
-      const timeoutId = setTimeout(() => {
-        if (!isReshufflingRef.current) {
-          preloadNextBatch();
-        }
-      }, 100);
-
-      return () => clearTimeout(timeoutId);
-    }
-  }, [displayedSpots.length, batchSize, preloadNextBatch]);
-
   return {
     spots: displayedSpots,
     getNextBatch,
-    totalSpots: poolRef.current.length, // Current pool size (not all 10k!)
-    seenCount: seenIdsRef.current.size, // Total unique spots seen
+    totalSpots: queueRef.current.length,
+    seenCount: knownIdsRef.current.size,
   };
 }

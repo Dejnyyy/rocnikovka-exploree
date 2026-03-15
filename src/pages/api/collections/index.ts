@@ -21,8 +21,17 @@ export default async function handler(
       name?: string;
       spotId?: string;
     };
-    const trimmed = (name ?? "").trim();
-    if (!trimmed) return res.status(400).json({ error: "Missing name" });
+    const rawName = (name ?? "").trim();
+    // Strip emojis and special characters that break URL slugs
+    const trimmed = rawName
+      .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "")
+      .replace(/[^\p{L}\p{N}\s._\-!&']/gu, "")
+      .replace(/\s+/g, " ")
+      .trim();
+    if (!trimmed)
+      return res
+        .status(400)
+        .json({ error: "Name must contain at least one letter or number" });
     if (trimmed.length > 32)
       return res.status(400).json({ error: "Name too long (max 32 chars)" });
 
@@ -33,6 +42,11 @@ export default async function handler(
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/(^-|-$)/g, "")
       .slice(0, 50);
+
+    if (!slug)
+      return res
+        .status(400)
+        .json({ error: "Name must contain at least one letter or number" });
 
     try {
       const result = await prisma.$transaction(async (tx) => {

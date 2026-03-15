@@ -12,6 +12,15 @@ function toSlug(s: string) {
     .slice(0, 60);
 }
 
+/** Strip emojis and non-URL-safe characters from the display name */
+function sanitizeName(s: string) {
+  return s
+    .replace(/[\p{Emoji_Presentation}\p{Extended_Pictographic}]/gu, "")
+    .replace(/[^\p{L}\p{N}\s._\-!&']/gu, "")
+    .replace(/\s+/g, " ")
+    .trim();
+}
+
 export default async function handler(
   req: NextApiRequest,
   res: NextApiResponse,
@@ -19,10 +28,18 @@ export default async function handler(
   if (req.method !== "POST") return res.status(405).end();
 
   const userId = req.body.userId; // vezmi z session
-  const name = (req.body.name ?? "").trim();
-  if (!name) return res.status(400).json({ error: "Name required" });
+  const rawName = (req.body.name ?? "").trim();
+  const name = sanitizeName(rawName);
+  if (!name)
+    return res
+      .status(400)
+      .json({ error: "Name must contain at least one letter or number" });
 
   let slug = toSlug(name);
+  if (!slug)
+    return res
+      .status(400)
+      .json({ error: "Name must contain at least one letter or number" });
   // případné dopočítání suffixu při kolizi
   let i = 2;
   // pokusně hledáme existenci stejně u usera
