@@ -5,6 +5,7 @@ import prisma from "@/lib/prisma";
 import { getServerSession } from "next-auth/next";
 import type { Session } from "next-auth";
 import { authOptions } from "./auth/[...nextauth]";
+import { selectRecycled } from "@/lib/feed";
 
 type Pin = {
   id: string;
@@ -20,6 +21,7 @@ type Pin = {
   comments: number;
   tags?: string[] | undefined;
   exploreReason?: string;
+  authorId?: string;
 };
 
 export default async function handler(
@@ -151,21 +153,19 @@ export default async function handler(
     }
 
     // ─── TIER 3: Recycled (already seen/saved/skipped, shuffled) ───
+    // Never excludes the full global seen list — only the ids already in THIS
+    // response (seenIds, which T1/T2 pushed into) — so the deck never starves.
     if (remaining > 0) {
       const pool = await prisma.spot.findMany({
-        where: seenIds.length > 0 ? { id: { notIn: seenIds } } : {},
+        where: userId ? { authorId: { not: userId } } : {},
         select: SPOT_SELECT,
         orderBy: { id: "desc" },
-        take: remaining * 3,
+        take: Math.max(remaining * 5, 50),
       });
 
-      const shuffled = pool.sort(() => 0.5 - Math.random());
-      const selected = shuffled.slice(0, remaining);
+      const selected = selectRecycled(pool, seenIds, remaining);
 
-      console.log(
-        `[T3 Recycled] ${selected.length}/${remaining}`,
-        selected.map((s) => s.title),
-      );
+      console.log(`[T3 Recycled] ${selected.length}/${remaining}`);
 
       const enriched = selected.map((s) => ({
         ...s,
@@ -198,7 +198,7 @@ const SPOT_SELECT = {
   image: true,
   tags: true,
   createdAt: true,
-  author: { select: { name: true, image: true, username: true } },
+  author: { select: { id: true, name: true, image: true, username: true } },
   _count: { select: { likes: true } },
 };
 
@@ -241,6 +241,7 @@ function formatSpots(slice: any[]): Pin[] {
       comments: 0,
       tags,
       exploreReason: s.exploreReason,
+      authorId: s.author?.id ?? "",
     };
   });
 }

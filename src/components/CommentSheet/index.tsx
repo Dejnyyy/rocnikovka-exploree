@@ -6,11 +6,13 @@ import CommentSection from "@/components/CommentSection";
 export function CommentSheet({
   open,
   spotId,
+  spotAuthorId,
   onClose,
   onCommentPosted,
 }: {
   open: boolean;
   spotId: string;
+  spotAuthorId?: string;
   onClose: () => void;
   onCommentPosted?: () => void;
 }) {
@@ -63,6 +65,7 @@ export function CommentSheet({
               spotId={spotId}
               className="h-[70vh] flex flex-col"
               onCommentPosted={onCommentPosted}
+              spotAuthorId={spotAuthorId}
             />
           </motion.div>
         </>

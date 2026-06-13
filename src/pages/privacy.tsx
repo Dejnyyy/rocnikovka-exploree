@@ -166,8 +166,9 @@ export default function PrivacyPolicyPage() {
                 6. Data Storage &amp; Security
               </h2>
               <p>
-                Your data is stored securely using industry-standard measures.
-                While we strive to protect your personal information, no method
+                Your data is stored in our own MySQL database hosted on an Oracle
+                Cloud virtual server. We use industry-standard measures to protect
+                it. While we strive to protect your personal information, no method
                 of electronic storage is 100% secure, and we cannot guarantee
                 absolute security.
               </p>
@@ -195,9 +196,18 @@ export default function PrivacyPolicyPage() {
                 8. Cookies &amp; Analytics
               </h2>
               <p>
-                We may use cookies and similar technologies to improve your
-                experience and analyze usage patterns. You can control cookie
-                preferences through your browser settings.
+                We only use cookies that are strictly necessary to operate the app
+                — primarily the authentication session cookie that keeps you signed
+                in. We do not use advertising or third-party analytics cookies. For
+                details on what we store and what you accept by using Exploree, see
+                our{" "}
+                <Link
+                  href="/cookies"
+                  className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+                >
+                  Cookies &amp; Data page
+                </Link>
+                .
               </p>
             </section>
 

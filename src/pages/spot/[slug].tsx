@@ -476,6 +476,7 @@ export default function SpotDetailPage({
               spotId={spot.id}
               className="max-h-[400px]"
               refreshKey={commentRefreshKey}
+              spotAuthorId={spot.author.id}
             />
           </div>
         </div>
@@ -495,6 +496,7 @@ export default function SpotDetailPage({
         <CommentSheet
           open={commentsOpen}
           spotId={spot.id}
+          spotAuthorId={spot.author.id}
           onClose={() => setCommentsOpen(false)}
           onCommentPosted={() => setCommentRefreshKey((k) => k + 1)}
         />

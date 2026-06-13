@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react";
 import Image from "next/image";
 import Link from "next/link";
 import { motion, AnimatePresence } from "framer-motion";
+import { canDeleteComment } from "@/lib/comments";
 
 type Comment = {
   id: string;
@@ -35,11 +36,13 @@ export default function CommentSection({
   className = "",
   refreshKey = 0,
   onCommentPosted,
+  spotAuthorId,
 }: {
   spotId: string;
   className?: string;
   refreshKey?: number;
   onCommentPosted?: () => void;
+  spotAuthorId?: string;
 }) {
   const { data: session } = useSession();
   const [comments, setComments] = useState<Comment[]>([]);
@@ -58,6 +61,23 @@ export default function CommentSection({
       .catch(console.error)
       .finally(() => setLoading(false));
   }, [spotId, refreshKey]);
+
+  async function handleDelete(commentId: string) {
+    if (!confirm("Delete this comment?")) return;
+    const prev = comments;
+    setComments((c) => c.filter((x) => x.id !== commentId));
+    try {
+      const res = await fetch("/api/comments", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentId }),
+      });
+      if (!res.ok) throw new Error("Failed to delete");
+    } catch (err) {
+      console.error(err);
+      setComments(prev); // roll back on failure
+    }
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -226,6 +246,18 @@ export default function CommentSection({
                   <p className="text-sm text-zinc-600 dark:text-zinc-300 break-words leading-relaxed mt-0.5">
                     {c.text}
                   </p>
+                  {canDeleteComment({
+                    viewerId: session?.user?.id as string | undefined,
+                    commentAuthorId: c.user.id,
+                    spotAuthorId: spotAuthorId ?? "",
+                  }) && (
+                    <button
+                      onClick={() => handleDelete(c.id)}
+                      className="mt-1 text-[11px] text-zinc-400 hover:text-rose-500 transition-colors"
+                    >
+                      Delete
+                    </button>
+                  )}
                 </div>
               </motion.div>
             ))}

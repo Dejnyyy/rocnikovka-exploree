@@ -1,8 +1,8 @@
 import Image from "next/image";
 import Link from "next/link";
 import { Quicksand } from "next/font/google";
-import { signIn, useSession } from "next-auth/react";
-import { useState } from "react";
+import { useSession } from "next-auth/react";
+import { useState, useEffect } from "react";
 import {
   useMutation,
   useInfiniteQuery,
@@ -14,6 +14,10 @@ import {
 import { InfiniteSwipeDeck } from "@/components/InfiniteSwipeDeck";
 import HeaderWithMenu from "@/components/HeaderWithMenu";
 import CommentSection from "@/components/CommentSection";
+import { trimRecentlySeen } from "@/lib/feed";
+import ConsentModal from "@/components/ConsentModal";
+import { hasPendingConsent, clearPendingConsent } from "@/components/ConsentGate";
+import ConsentGate from "@/components/ConsentGate";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -33,6 +37,7 @@ type Spot = {
     username?: string | null;
   } | null;
   exploreReason?: string;
+  authorId?: string;
 };
 
 // API response types
@@ -47,6 +52,7 @@ type ExplorePin = {
     handle?: string;
   };
   exploreReason?: string;
+  authorId?: string;
 };
 type ExploreResponse = {
   items: ExplorePin[];
@@ -98,38 +104,87 @@ export default function Home() {
   if (!session) {
     return (
       <div
-        className={`${quicksand.className} relative min-h-screen flex flex-col items-center justify-center gap-6 p-8 bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100`}
+        className={`${quicksand.className} relative min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 overflow-x-hidden`}
       >
-        {/* Foreground content */}
-        <div className="relative z-10 flex flex-col items-center gap-6">
-          <Image
-            src="/logos/exploree.png"
-            alt="Exploree logo"
-            width={240}
-            height={240}
-            priority
+        {/* background glows (matches onboarding) */}
+        <div className="pointer-events-none fixed inset-0">
+          <div
+            className="absolute -top-32 -left-24 h-72 w-72 rounded-full blur-3xl opacity-20 dark:opacity-40"
+            style={{ background: "radial-gradient(closest-side, #8e79ff, transparent)" }}
           />
-          <div className="rounded-full bg-gradient-to-r from-pink-400 to-yellow-300 p-[3px]">
-            <button
-              onClick={() => signIn("google")}
-              className="w-full rounded-full px-8 py-3 text-base cursor-pointer
-                         bg-black text-white
-                         hover:bg-gradient-to-r hover:from-pink-400 hover:to-yellow-300
-                         hover:text-black font-semibold transition-all"
-            >
-              Continue with Google
-            </button>
-          </div>
-          <p className="mt-4 text-xs text-zinc-400 dark:text-zinc-500 text-center max-w-[280px] leading-relaxed">
-            By signing in, you agree to our{" "}
-            <Link
-              href="/privacy"
-              className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
-            >
-              Privacy Policy
-            </Link>
-          </p>
+          <div
+            className="absolute top-20 right-[-6rem] h-80 w-80 rounded-full blur-3xl opacity-20 dark:opacity-40"
+            style={{ background: "radial-gradient(closest-side, #f17ea7, transparent)" }}
+          />
+          <div
+            className="absolute bottom-[-8rem] left-1/2 h-96 w-96 -translate-x-1/2 rounded-full blur-3xl opacity-15 dark:opacity-30"
+            style={{ background: "radial-gradient(closest-side, #fcd77f, transparent)" }}
+          />
         </div>
+
+        <main className="relative z-10 mx-auto max-w-5xl px-6">
+          {/* Hero */}
+          <section className="flex flex-col items-center text-center pt-20 pb-16 gap-6">
+            <Image src="/logos/exploree.png" alt="Exploree logo" width={160} height={160} priority />
+            <h1 className="text-4xl sm:text-5xl font-bold tracking-tight">
+              Discover places worth the trip.
+            </h1>
+            <p className="max-w-xl text-base sm:text-lg text-zinc-600 dark:text-zinc-400">
+              Swipe through real spots shared by real people, save the ones you love
+              into collections, and follow explorers with great taste.
+            </p>
+            <div className="mt-2">
+              <ConsentGate />
+            </div>
+          </section>
+
+          {/* How it works */}
+          <section className="py-12">
+            <h2 className="text-center text-2xl font-bold mb-8">How it works</h2>
+            <div className="grid gap-6 sm:grid-cols-3">
+              {[
+                { n: "1", t: "Swipe to explore", d: "Browse a never-ending deck of places. Skip what's not for you, keep what is." },
+                { n: "2", t: "Save to collections", d: "Organize your favourite spots into collections you can revisit and share." },
+                { n: "3", t: "Follow explorers", d: "Follow people whose taste you trust and see their newest finds first." },
+              ].map((s) => (
+                <div key={s.n} className="rounded-2xl border border-zinc-200/70 dark:border-white/10 bg-white/70 dark:bg-white/5 p-6 backdrop-blur">
+                  <div className="mb-3 inline-flex h-8 w-8 items-center justify-center rounded-full bg-gradient-to-r from-pink-400 to-yellow-300 text-sm font-semibold text-black">
+                    {s.n}
+                  </div>
+                  <h3 className="font-semibold mb-1">{s.t}</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{s.d}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Feature highlights */}
+          <section className="py-12">
+            <div className="grid gap-6 sm:grid-cols-2">
+              {[
+                { t: "A swipe deck that never runs dry", d: "Endless discovery, fresh places first, favourites resurfaced." },
+                { t: "Collections", d: "Group spots into public or private collections." },
+                { t: "Map view", d: "See where every place sits on the map." },
+                { t: "Profiles", d: "A public page for everything you've shared." },
+              ].map((f) => (
+                <div key={f.t} className="rounded-2xl border border-zinc-200/70 dark:border-white/10 bg-white/70 dark:bg-white/5 p-6 backdrop-blur">
+                  <h3 className="font-semibold mb-1">{f.t}</h3>
+                  <p className="text-sm text-zinc-600 dark:text-zinc-400">{f.d}</p>
+                </div>
+              ))}
+            </div>
+          </section>
+
+          {/* Footer */}
+          <footer className="py-12 text-center text-sm text-zinc-500 dark:text-zinc-400">
+            <div className="flex items-center justify-center gap-4">
+              <Link href="/privacy" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">Privacy Policy</Link>
+              <Link href="/cookies" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">Cookies</Link>
+              <a href="mailto:support@exploree.dejny.eu" className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100">Contact</a>
+            </div>
+            <p className="mt-4">© {new Date().getFullYear()} Exploree</p>
+          </footer>
+        </main>
       </div>
     );
   }
@@ -143,6 +198,27 @@ export default function Home() {
 
 function AuthedHome() {
   const { data: session } = useSession();
+
+  const [needsConsent, setNeedsConsent] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (hasPendingConsent()) {
+        await fetch("/api/consent", { method: "POST" }).catch(() => {});
+        clearPendingConsent();
+      }
+      const res = await fetch("/api/consent").catch(() => null);
+      if (!res || cancelled) return;
+      const data = await res.json().catch(() => null);
+      if (data && (!data.consentedAt || data.consentVersion !== data.currentVersion)) {
+        setNeedsConsent(true);
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Infinite query for explore spots
   const {
@@ -163,16 +239,14 @@ function AuthedHome() {
     queryFn: ({ pageParam }) => fetchExplorePage(pageParam),
     initialPageParam: undefined, // ✅ required in v5
     getNextPageParam: (lastPage, allPages) => {
-      // Collect all IDs we've seen so far across all paginated batches
+      // Only send a bounded window of recently-seen ids so the server prefers
+      // fresh content first but can always recycle older spots. We never return
+      // undefined, so the deck keeps requesting forever.
       const allSeenIds = allPages.flatMap((p) => p.items.map((i) => i.id));
-
-      // If the API returns exactly 0 items, we stop requesting automatically
-      // But if it returned anything, we can always try to ask for more recycled spots
-      if (lastPage.items.length === 0) return undefined;
-
+      const recentlySeen = trimRecentlySeen(allSeenIds, 30);
       return {
         cursor: lastPage.nextCursor ?? undefined,
-        seenIds: allSeenIds,
+        seenIds: recentlySeen,
       };
     },
     staleTime: 30_000,
@@ -203,10 +277,12 @@ function AuthedHome() {
             }
           : null,
         exploreReason: p.exploreReason,
+        authorId: p.authorId,
       };
     });
 
   const [currentSpotId, setCurrentSpotId] = useState<string | null>(null);
+  const [currentSpotAuthorId, setCurrentSpotAuthorId] = useState<string | null>(null);
   const [commentRefreshKey, setCommentRefreshKey] = useState(0);
 
   const queryClient = useQueryClient();
@@ -269,6 +345,7 @@ function AuthedHome() {
                 }}
                 onCardChange={(s) => {
                   setCurrentSpotId(s?.id ?? null);
+                  setCurrentSpotAuthorId(s?.authorId ?? null);
                   if (s) {
                     console.log(
                       `%c[Explore Deck] 📍 ${s.title}`,
@@ -293,6 +370,7 @@ function AuthedHome() {
                 spotId={currentSpotId}
                 className="flex-1 min-h-0"
                 refreshKey={commentRefreshKey}
+                spotAuthorId={currentSpotAuthorId ?? undefined}
               />
             </div>
           )}
@@ -304,6 +382,7 @@ function AuthedHome() {
           </div>
         )}
       </main>
+      {needsConsent && <ConsentModal onAccept={() => setNeedsConsent(false)} />}
     </div>
   );
 }

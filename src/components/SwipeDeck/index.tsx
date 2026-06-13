@@ -64,6 +64,7 @@ export type Spot = {
     username?: string | null;
   } | null;
   exploreReason?: string;
+  authorId?: string;
 };
 
 type SwipeDeckProps = {
@@ -271,6 +272,7 @@ export function SwipeDeck({
       <CommentSheet
         open={commentsOpen}
         spotId={commentSpotId ?? ""}
+        spotAuthorId={top.authorId}
         onClose={() => setCommentsOpen(false)}
         onCommentPosted={onCommentPosted}
       />
