@@ -33,6 +33,7 @@ type Spot = {
     username?: string | null;
   } | null;
   exploreReason?: string;
+  authorId?: string;
 };
 
 // API response types
@@ -47,6 +48,7 @@ type ExplorePin = {
     handle?: string;
   };
   exploreReason?: string;
+  authorId?: string;
 };
 type ExploreResponse = {
   items: ExplorePin[];
@@ -203,10 +205,12 @@ function AuthedHome() {
             }
           : null,
         exploreReason: p.exploreReason,
+        authorId: p.authorId,
       };
     });
 
   const [currentSpotId, setCurrentSpotId] = useState<string | null>(null);
+  const [currentSpotAuthorId, setCurrentSpotAuthorId] = useState<string | null>(null);
   const [commentRefreshKey, setCommentRefreshKey] = useState(0);
 
   const queryClient = useQueryClient();
@@ -269,6 +273,7 @@ function AuthedHome() {
                 }}
                 onCardChange={(s) => {
                   setCurrentSpotId(s?.id ?? null);
+                  setCurrentSpotAuthorId(s?.authorId ?? null);
                   if (s) {
                     console.log(
                       `%c[Explore Deck] 📍 ${s.title}`,
@@ -293,6 +298,7 @@ function AuthedHome() {
                 spotId={currentSpotId}
                 className="flex-1 min-h-0"
                 refreshKey={commentRefreshKey}
+                spotAuthorId={currentSpotAuthorId ?? undefined}
               />
             </div>
           )}

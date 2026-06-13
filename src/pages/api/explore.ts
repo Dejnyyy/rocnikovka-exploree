@@ -20,6 +20,7 @@ type Pin = {
   comments: number;
   tags?: string[] | undefined;
   exploreReason?: string;
+  authorId?: string;
 };
 
 export default async function handler(
@@ -198,7 +199,7 @@ const SPOT_SELECT = {
   image: true,
   tags: true,
   createdAt: true,
-  author: { select: { name: true, image: true, username: true } },
+  author: { select: { id: true, name: true, image: true, username: true } },
   _count: { select: { likes: true } },
 };
 
@@ -241,6 +242,7 @@ function formatSpots(slice: any[]): Pin[] {
       comments: 0,
       tags,
       exploreReason: s.exploreReason,
+      authorId: s.author?.id ?? "",
     };
   });
 }
