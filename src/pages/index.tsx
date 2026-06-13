@@ -2,7 +2,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { Quicksand } from "next/font/google";
 import { signIn, useSession } from "next-auth/react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import {
   useMutation,
   useInfiniteQuery,
@@ -15,6 +15,8 @@ import { InfiniteSwipeDeck } from "@/components/InfiniteSwipeDeck";
 import HeaderWithMenu from "@/components/HeaderWithMenu";
 import CommentSection from "@/components/CommentSection";
 import { trimRecentlySeen } from "@/lib/feed";
+import ConsentModal from "@/components/ConsentModal";
+import { hasPendingConsent, clearPendingConsent } from "@/components/ConsentGate";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -146,6 +148,25 @@ export default function Home() {
 
 function AuthedHome() {
   const { data: session } = useSession();
+
+  const [needsConsent, setNeedsConsent] = useState(false);
+
+  useEffect(() => {
+    let cancelled = false;
+    (async () => {
+      if (hasPendingConsent()) {
+        await fetch("/api/consent", { method: "POST" }).catch(() => {});
+        clearPendingConsent();
+      }
+      const res = await fetch("/api/consent").catch(() => null);
+      if (!res || cancelled) return;
+      const data = await res.json().catch(() => null);
+      if (data && !data.consentedAt) setNeedsConsent(true);
+    })();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Infinite query for explore spots
   const {
@@ -309,6 +330,7 @@ function AuthedHome() {
           </div>
         )}
       </main>
+      {needsConsent && <ConsentModal onAccept={() => setNeedsConsent(false)} />}
     </div>
   );
 }
