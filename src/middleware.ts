@@ -8,9 +8,13 @@ export default withAuth(
     const { pathname, search } = req.nextUrl;
     const isHome = pathname === "/";
     const isOnboarding = pathname.startsWith("/onboarding");
-    // Not logged in -> /home
+    // Not logged in -> /home, except public legal pages
     if (!token) {
-      if (!isHome) {
+      const isPublic =
+        isHome ||
+        pathname.startsWith("/privacy") ||
+        pathname.startsWith("/cookies");
+      if (!isPublic) {
         const url = new URL("/", req.url);
         url.searchParams.set("next", pathname + search);
         return NextResponse.redirect(url);
