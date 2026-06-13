@@ -468,7 +468,7 @@ export default function LandingPage() {
               </div>
             </div>
             <p className="mt-6 text-center text-xs text-zinc-400 dark:text-zinc-500">
-              © {new Date().getFullYear()} Exploree. Built with ❤️ for curious travellers.
+              © {new Date().getFullYear()} Exploree. Built by <Link href="https://dejny.eu" target="_blank" rel="noopener noreferrer" className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors">Dejny</Link>.
             </p>
           </div>
         </footer>
