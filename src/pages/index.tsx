@@ -14,6 +14,7 @@ import {
 import { InfiniteSwipeDeck } from "@/components/InfiniteSwipeDeck";
 import HeaderWithMenu from "@/components/HeaderWithMenu";
 import CommentSection from "@/components/CommentSection";
+import { trimRecentlySeen } from "@/lib/feed";
 
 const quicksand = Quicksand({
   subsets: ["latin"],
@@ -165,16 +166,14 @@ function AuthedHome() {
     queryFn: ({ pageParam }) => fetchExplorePage(pageParam),
     initialPageParam: undefined, // ✅ required in v5
     getNextPageParam: (lastPage, allPages) => {
-      // Collect all IDs we've seen so far across all paginated batches
+      // Only send a bounded window of recently-seen ids so the server prefers
+      // fresh content first but can always recycle older spots. We never return
+      // undefined, so the deck keeps requesting forever.
       const allSeenIds = allPages.flatMap((p) => p.items.map((i) => i.id));
-
-      // If the API returns exactly 0 items, we stop requesting automatically
-      // But if it returned anything, we can always try to ask for more recycled spots
-      if (lastPage.items.length === 0) return undefined;
-
+      const recentlySeen = trimRecentlySeen(allSeenIds, 30);
       return {
         cursor: lastPage.nextCursor ?? undefined,
-        seenIds: allSeenIds,
+        seenIds: recentlySeen,
       };
     },
     staleTime: 30_000,
