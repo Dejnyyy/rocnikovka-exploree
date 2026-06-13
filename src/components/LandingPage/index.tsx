@@ -208,28 +208,59 @@ export default function LandingPage() {
       </div>
 
       <main className="relative z-10">
-        {/* ===== Sticky Header ===== */}
-        <header className="sticky top-0 z-50 border-b border-zinc-200/60 dark:border-white/5 bg-zinc-50/80 dark:bg-zinc-950/80 backdrop-blur-xl">
-          <div className="mx-auto max-w-6xl flex items-center justify-between px-6 py-3">
-            <div className="flex items-center gap-3">
-              <Image src="/logos/exploree.png" alt="Exploree" width={36} height={36} />
-              <span className="text-lg font-bold tracking-tight">Exploree</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <Link
-                href="/privacy"
-                className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors hidden sm:block"
-              >
-                Privacy
+        {/* ===== Floating Glass Navbar ===== */}
+        <header className="sticky top-0 z-50 px-4 pt-3">
+          <nav className="mx-auto max-w-5xl rounded-2xl border border-zinc-200/50 dark:border-white/10 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-2xl shadow-lg shadow-black/5 dark:shadow-black/30">
+            <div className="flex items-center justify-between px-5 py-2.5">
+              {/* Logo */}
+              <Link href="/" className="flex items-center gap-2.5 group">
+                <Image
+                  src="/logos/exploree.png"
+                  alt="Exploree"
+                  width={32}
+                  height={32}
+                  className="group-hover:scale-110 transition-transform duration-200"
+                />
+                <span className="text-base font-bold tracking-tight">Exploree</span>
               </Link>
-              <a
-                href="mailto:support@exploree.dejny.eu"
-                className="text-xs text-zinc-500 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors hidden sm:block"
-              >
-                Contact
-              </a>
+
+              {/* Nav links — desktop */}
+              <div className="hidden sm:flex items-center gap-1">
+                {[
+                  { label: "Privacy", href: "/privacy" },
+                  { label: "Cookies", href: "/cookies" },
+                  { label: "Contact", href: "mailto:dejny@dejny.eu", external: true },
+                ].map((item) => {
+                  const El = item.external ? "a" : Link;
+                  return (
+                    <El
+                      key={item.label}
+                      href={item.href}
+                      className="px-3.5 py-1.5 text-xs font-medium text-zinc-500 dark:text-zinc-400 rounded-full hover:bg-zinc-100 dark:hover:bg-white/10 hover:text-zinc-900 dark:hover:text-zinc-100 transition-all duration-200"
+                    >
+                      {item.label}
+                    </El>
+                  );
+                })}
+              </div>
+
+              {/* Sign-in pill */}
+              <div className="rounded-full bg-gradient-to-r from-pink-400 to-yellow-300 p-[1.5px]">
+                <button
+                  onClick={() => {
+                    const el = document.querySelector('[data-consent-gate]') as HTMLElement;
+                    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                  }}
+                  className="rounded-full px-4 py-1.5 text-xs font-semibold
+                             bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100
+                             hover:bg-gradient-to-r hover:from-pink-400 hover:to-yellow-300 hover:text-black
+                             transition-all duration-200"
+                >
+                  Sign in
+                </button>
+              </div>
             </div>
-          </div>
+          </nav>
         </header>
 
         {/* ===== Hero ===== */}
@@ -429,7 +460,7 @@ export default function LandingPage() {
                   Cookies
                 </Link>
                 <a
-                  href="mailto:support@exploree.dejny.eu"
+                  href="mailto:dejny@dejny.eu"
                   className="hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                 >
                   Contact

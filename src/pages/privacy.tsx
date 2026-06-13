@@ -233,7 +233,7 @@ export default function PrivacyPolicyPage() {
                   href="mailto:support@exploree.app"
                   className="underline underline-offset-2 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
                 >
-                  support@exploree.dejny.eu
+                  dejny@dejny.eu
                 </a>
                 .
               </p>
