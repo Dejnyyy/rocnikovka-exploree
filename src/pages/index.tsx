@@ -211,7 +211,9 @@ function AuthedHome() {
       const res = await fetch("/api/consent").catch(() => null);
       if (!res || cancelled) return;
       const data = await res.json().catch(() => null);
-      if (data && !data.consentedAt) setNeedsConsent(true);
+      if (data && (!data.consentedAt || data.consentVersion !== data.currentVersion)) {
+        setNeedsConsent(true);
+      }
     })();
     return () => {
       cancelled = true;
