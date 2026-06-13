@@ -16,6 +16,8 @@ model User {
   bio                   String?            @db.VarChar(120)
   createdAt             DateTime           @default(now())
   updatedAt             DateTime           @updatedAt
+  consentedAt           DateTime?
+  consentVersion        String?            @db.VarChar(20)
   accounts              Account[]
   collections           Collection[]       @relation("UserCollections")
   collectionMemberships CollectionMember[] @relation("CollectionMembers")
