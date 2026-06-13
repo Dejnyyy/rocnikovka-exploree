@@ -35,6 +35,18 @@ export default function ProfileSettings() {
   const [username, setUsername] = useState("");
   const [image, setImage] = useState<string | undefined>(undefined);
 
+  const [consent, setConsent] = useState<{
+    consentedAt: string | null;
+    consentVersion: string | null;
+  } | null>(null);
+
+  useEffect(() => {
+    fetch("/api/consent")
+      .then((r) => r.json())
+      .then((d) => setConsent(d))
+      .catch(() => {});
+  }, []);
+
   useEffect(() => {
     if (!session?.user) return;
     setName(session.user.name ?? "");
@@ -399,6 +411,25 @@ export default function ProfileSettings() {
           </div>
         </dl>
       </div>
+
+      {/* Privacy & cookies */}
+      <section className="mt-6 rounded-2xl border border-zinc-200 dark:border-zinc-800 p-5">
+        <h3 className="text-base font-semibold mb-2">Privacy & cookies</h3>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400 mb-3">
+          {consent?.consentedAt
+            ? `You accepted our Privacy Policy and necessary cookies on ${new Date(
+                consent.consentedAt,
+              ).toLocaleDateString()}.`
+            : "We could not find a recorded consent for your account."}
+        </p>
+        <p className="text-sm text-zinc-600 dark:text-zinc-400">
+          Exploree uses only strictly necessary cookies. To withdraw consent, sign out
+          and request account deletion. Read more in our{" "}
+          <Link href="/privacy" className="underline underline-offset-2">Privacy Policy</Link>{" "}
+          and{" "}
+          <Link href="/cookies" className="underline underline-offset-2">Cookies page</Link>.
+        </p>
+      </section>
     </section>
   );
 }
