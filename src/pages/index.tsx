@@ -1,6 +1,3 @@
-import Image from "next/image";
-import Link from "next/link";
-import Head from "next/head";
 import { Quicksand } from "next/font/google";
 import { useSession } from "next-auth/react";
 import { useState, useEffect } from "react";
@@ -18,7 +15,6 @@ import CommentSection from "@/components/CommentSection";
 import { trimRecentlySeen } from "@/lib/feed";
 import ConsentModal from "@/components/ConsentModal";
 import { hasPendingConsent, clearPendingConsent } from "@/components/ConsentGate";
-import ConsentGate from "@/components/ConsentGate";
 import LandingPage from "@/components/LandingPage";
 
 const quicksand = Quicksand({
@@ -104,22 +100,7 @@ export default function Home() {
     );
   }
   if (!session) {
-    return (
-      <>
-        <Head>
-          <title>Exploree — Discover places worth the trip</title>
-          <meta
-            name="description"
-            content="Swipe through real spots shared by real people, save your favourites into collections, and follow explorers with great taste. Free, beautiful, and community-driven."
-          />
-          <meta
-            name="viewport"
-            content="width=device-width, initial-scale=1, viewport-fit=cover"
-          />
-        </Head>
-        <LandingPage />
-      </>
-    );
+    return <LandingPage />;
   }
 
   return (

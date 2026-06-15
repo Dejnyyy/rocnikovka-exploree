@@ -365,12 +365,6 @@ export default function LandingPage() {
             <div className="mt-4">
               <ConsentGate />
             </div>
-
-            {/* Tiny social proof line */}
-            <p className="text-xs text-zinc-500 dark:text-zinc-500 flex items-center gap-1.5">
-              <span className="inline-block h-2 w-2 rounded-full bg-emerald-400 animate-pulse" />
-              Join hundreds of explorers already discovering the world
-            </p>
           </div>
         </section>
 
