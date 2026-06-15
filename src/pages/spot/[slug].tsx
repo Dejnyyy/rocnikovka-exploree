@@ -130,7 +130,6 @@ export default function SpotDetailPage({
   spot,
   savedIn,
   privateCollectionsCount,
-  directSavesCount,
 }: InferGetServerSidePropsType<typeof getServerSideProps>) {
   const { data: session } = useSession();
   const [pickerOpen, setPickerOpen] = useState(false);

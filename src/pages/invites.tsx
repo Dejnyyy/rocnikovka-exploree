@@ -1,11 +1,10 @@
 // pages/invites.tsx
-import type { GetServerSideProps, InferGetServerSidePropsType } from "next";
+import type { GetServerSideProps } from "next";
 import Head from "next/head";
 import Image from "next/image";
 import Link from "next/link";
 import { getServerSession } from "next-auth";
 import { authOptions } from "./api/auth/[...nextauth]";
-import prisma from "@/lib/prisma";
 import HeaderWithMenu from "@/components/HeaderWithMenu";
 import { useState, useEffect } from "react";
 import { useSession } from "next-auth/react";
@@ -243,9 +242,7 @@ function InviteCard({
   );
 }
 
-export default function InvitesPage(
-  _props: InferGetServerSidePropsType<typeof getServerSideProps>,
-) {
+export default function InvitesPage() {
   const { data: session } = useSession();
   const viewerName = session?.user?.name ?? session?.user?.email ?? undefined;
   const viewerAvatar = session?.user?.image ?? undefined;
@@ -273,7 +270,7 @@ export default function InvitesPage(
       .finally(() => setLoaded(true));
   }, []);
 
-  function handleInviteRespond(collectionId: string, _accept: boolean) {
+  function handleInviteRespond(collectionId: string) {
     setInvites((prev) => prev.filter((i) => i.collectionId !== collectionId));
   }
 

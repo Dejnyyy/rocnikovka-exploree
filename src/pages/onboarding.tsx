@@ -1,6 +1,5 @@
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
-import { useRouter } from "next/router";
 import HeaderWithMenu from "@/components/HeaderWithMenu";
 
 /* ---------------- core --------------------------------------------------- */
@@ -42,7 +41,6 @@ function applyTheme(t: "dark" | "light") {
 /* ---------------- page --------------------------------------------------- */
 export default function OnboardingPage() {
   const { data: session, update } = useSession();
-  const router = useRouter();
 
   const [mounted, setMounted] = useState(false);
 
@@ -59,13 +57,9 @@ export default function OnboardingPage() {
   // suggestions
   const [suggestions, setSuggestions] = useState<string[]>([]);
 
-  // theme
-  const [theme, setTheme] = useState<"dark" | "light">("light");
-
   // init theme
   useEffect(() => {
     const initial = getStoredTheme() ?? getSystemTheme();
-    setTheme(initial);
     applyTheme(initial);
     setMounted(true);
 
@@ -74,7 +68,6 @@ export default function OnboardingPage() {
         e.key === "theme" &&
         (e.newValue === "dark" || e.newValue === "light")
       ) {
-        setTheme(e.newValue);
         applyTheme(e.newValue);
       }
     };
@@ -82,11 +75,6 @@ export default function OnboardingPage() {
     return () => window.removeEventListener("storage", onStorage);
   }, []);
 
-  function toggleTheme() {
-    const next = theme === "dark" ? "light" : "dark";
-    setTheme(next);
-    applyTheme(next);
-  }
 
   // debounce username check
   const debounceRef = useRef<number | null>(null);

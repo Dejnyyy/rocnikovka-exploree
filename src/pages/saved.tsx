@@ -47,7 +47,6 @@ async function getJSON<T>(url: string): Promise<T> {
 }
 
 function SavedPageInner() {
-  const { data: session } = useSession();
   const loadMoreRef = useRef<HTMLDivElement>(null);
 
   const {
@@ -56,7 +55,6 @@ function SavedPageInner() {
     hasNextPage,
     isFetchingNextPage,
     isLoading,
-    refetch,
   } = useInfiniteQuery({
     queryKey: ["me", "saved"],
     queryFn: ({ pageParam }) => {

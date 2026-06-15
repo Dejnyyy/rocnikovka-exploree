@@ -292,7 +292,7 @@ function PersonCard({ person }: { person: Person }) {
         refetchType: "none", // Don't refetch immediately
       });
     },
-    onError: (error, variables, context) => {
+    onError: (error) => {
       // Revert on error - don't change state
       console.error("Follow error:", error);
     },

@@ -8,16 +8,6 @@ const prisma = new PrismaClient();
 
 // same sanitizer as client
 const USERNAME_RE = /^[a-zA-Z0-9._]{3,20}$/;
-function toHandle(s: string) {
-  return s
-    .trim()
-    .toLowerCase()
-    .normalize("NFKD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .replace(/[^a-z0-9._]/g, "")
-    .replace(/^[._]+|[._]+$/g, "")
-    .slice(0, 20);
-}
 
 // reserve some paths/words
 const RESERVED = new Set([
