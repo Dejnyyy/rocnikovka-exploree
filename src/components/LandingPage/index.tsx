@@ -15,8 +15,14 @@ import {
   Heart,
   Layers,
   Eye,
+  Sun,
+  Moon,
 } from "lucide-react";
+import { signIn } from "next-auth/react";
 import ConsentGate from "@/components/ConsentGate";
+import { SwipeCardMockup } from "@/components/LandingPage/mockups/SwipeCardMockup";
+import { CollectionsMockup } from "@/components/LandingPage/mockups/CollectionsMockup";
+import { MapMockup } from "@/components/LandingPage/mockups/MapMockup";
 
 /* ---------- Scroll reveal hook ---------- */
 function useReveal() {
@@ -46,12 +52,14 @@ function FloatingIcon({
   size = 64,
   floatClass = "animate-float",
   style,
+  cropShadow = true,
 }: {
   src: string;
   alt: string;
   size?: number;
   floatClass?: string;
   style?: React.CSSProperties;
+  cropShadow?: boolean;
 }) {
   return (
     <div
@@ -64,11 +72,61 @@ function FloatingIcon({
           alt={alt}
           width={size}
           height={size}
-          className="drop-shadow-xl opacity-80 dark:opacity-60"
+          className="opacity-90 dark:opacity-70"
           draggable={false}
+          style={
+            cropShadow
+              ? {
+                  // Hide the baked-in drop shadow at the bottom of the PNG
+                  maskImage:
+                    "linear-gradient(to bottom, #000 76%, transparent 87%)",
+                  WebkitMaskImage:
+                    "linear-gradient(to bottom, #000 76%, transparent 87%)",
+                }
+              : undefined
+          }
         />
       </div>
     </div>
+  );
+}
+
+/* ---------- Theme toggle (same mechanism as the app sidebar) ---------- */
+function ThemeToggle() {
+  const [theme, setTheme] = useState<"light" | "dark">("light");
+
+  useEffect(() => {
+    const stored = localStorage.getItem("theme") as "light" | "dark" | null;
+    const initial =
+      stored ??
+      (window.matchMedia?.("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light");
+    setTheme(initial);
+  }, []);
+
+  const toggle = () => {
+    const next = theme === "dark" ? "light" : "dark";
+    const root = document.documentElement;
+    if (next === "dark") root.classList.add("dark");
+    else root.classList.remove("dark");
+    root.style.colorScheme = next;
+    localStorage.setItem("theme", next);
+    setTheme(next);
+  };
+
+  return (
+    <button
+      onClick={toggle}
+      aria-label="Toggle dark mode"
+      className="grid h-8 w-8 cursor-pointer place-items-center rounded-full text-zinc-500 dark:text-zinc-400 hover:bg-zinc-100 dark:hover:bg-white/10 hover:text-zinc-900 dark:hover:text-zinc-100 transition-colors"
+    >
+      {theme === "dark" ? (
+        <Sun className="h-4 w-4" />
+      ) : (
+        <Moon className="h-4 w-4" />
+      )}
+    </button>
   );
 }
 
@@ -108,7 +166,7 @@ function FaqItem({ q, a }: { q: string; a: string }) {
     <div className="border-b border-zinc-200/60 dark:border-white/10">
       <button
         onClick={() => setOpen(!open)}
-        className="w-full flex items-center justify-between py-5 text-left group"
+        className="w-full flex items-center justify-between py-5 text-left group cursor-pointer"
       >
         <span className="font-medium text-base pr-4">{q}</span>
         <ChevronDown
@@ -134,16 +192,14 @@ function FeatureShowcase({
   icon: Icon,
   title,
   description,
-  imageSrc,
-  imageAlt,
+  visual,
   reverse = false,
   badge,
 }: {
   icon: React.ElementType;
   title: string;
   description: string;
-  imageSrc: string;
-  imageAlt: string;
+  visual: React.ReactNode;
   reverse?: boolean;
   badge?: string;
 }) {
@@ -164,20 +220,8 @@ function FeatureShowcase({
             {description}
           </p>
         </div>
-        {/* Image */}
-        <div className="flex-1 w-full max-w-md lg:max-w-lg">
-          <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/20 dark:shadow-black/50 border border-zinc-200/50 dark:border-white/10">
-            <Image
-              src={imageSrc}
-              alt={imageAlt}
-              width={600}
-              height={600}
-              className="w-full h-auto"
-            />
-            {/* Gloss overlay */}
-            <div className="absolute inset-0 bg-gradient-to-tr from-transparent via-white/5 to-white/10 pointer-events-none" />
-          </div>
-        </div>
+        {/* Visual */}
+        <div className="flex-1 w-full max-w-md lg:max-w-lg">{visual}</div>
       </div>
     </div>
   );
@@ -186,7 +230,7 @@ function FeatureShowcase({
 /* ========== Main Landing Page ========== */
 export default function LandingPage() {
   return (
-    <div className="relative min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 overflow-x-hidden">
+    <div className="relative min-h-screen bg-zinc-50 text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100 overflow-x-clip">
       {/* ---- Background glows ---- */}
       <div className="pointer-events-none fixed inset-0">
         <div
@@ -207,9 +251,9 @@ export default function LandingPage() {
         />
       </div>
 
-      <main className="relative z-10">
+      <main className="relative z-10 pt-16">
         {/* ===== Floating Glass Navbar ===== */}
-        <header className="sticky top-0 z-50 px-4 pt-3">
+        <header className="fixed inset-x-0 top-0 z-50 px-4 pt-3">
           <nav className="mx-auto max-w-5xl rounded-2xl border border-zinc-200/50 dark:border-white/10 bg-white/60 dark:bg-zinc-900/60 backdrop-blur-2xl shadow-lg shadow-black/5 dark:shadow-black/30">
             <div className="flex items-center justify-between px-5 py-2.5">
               {/* Logo */}
@@ -244,70 +288,61 @@ export default function LandingPage() {
                 })}
               </div>
 
-              {/* Sign-in pill */}
-              <div className="rounded-full bg-gradient-to-r from-pink-400 to-yellow-300 p-[1.5px]">
-                <button
-                  onClick={() => {
-                    const el = document.querySelector('[data-consent-gate]') as HTMLElement;
-                    el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                  }}
-                  className="rounded-full px-4 py-1.5 text-xs font-semibold
-                             bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100
-                             hover:bg-gradient-to-r hover:from-pink-400 hover:to-yellow-300 hover:text-black
-                             transition-all duration-200"
-                >
-                  Sign in
-                </button>
+              {/* Right actions */}
+              <div className="flex items-center gap-2">
+                <ThemeToggle />
+                {/* Sign-in pill */}
+                <div className="rounded-full bg-gradient-to-r from-pink-400 to-yellow-300 p-[1.5px]">
+                  <button
+                    onClick={() => signIn("google")}
+                    className="cursor-pointer rounded-full px-4 py-1.5 text-xs font-semibold
+                               bg-white dark:bg-zinc-900 text-zinc-900 dark:text-zinc-100
+                               hover:bg-gradient-to-r hover:from-pink-400 hover:to-yellow-300 hover:text-black
+                               transition-all duration-200"
+                  >
+                    Sign in
+                  </button>
+                </div>
               </div>
             </div>
           </nav>
         </header>
 
         {/* ===== Hero ===== */}
-        <section className="relative mx-auto max-w-6xl px-6 pt-16 sm:pt-24 pb-20">
+        <section className="relative mx-auto max-w-6xl px-6 pt-20 sm:pt-28 pb-20">
           {/* Floating icons around hero */}
           <FloatingIcon
-            src="/landing/icon-waypoint.png"
-            alt="Map pin"
-            size={72}
+            src="/logos/exploree.png"
+            alt="Exploree pin"
+            size={104}
             floatClass="animate-float"
-            style={{ top: "10%", left: "4%", transform: "rotate(-12deg)" }}
+            cropShadow={false}
+            style={{ top: "8%", left: "3%", transform: "rotate(-12deg)" }}
+          />
+          <FloatingIcon
+            src="/landing/icon-heart-clean.png"
+            alt="Saved place"
+            size={84}
+            floatClass="animate-float-slow-delayed"
+            cropShadow={false}
+            style={{ top: "13%", right: "4%", transform: "rotate(8deg)" }}
           />
           <FloatingIcon
             src="/landing/icon-compass.png"
             alt="Compass"
-            size={60}
-            floatClass="animate-float-slow-delayed"
-            style={{ top: "15%", right: "5%", transform: "rotate(8deg)" }}
-          />
-          <FloatingIcon
-            src="/landing/icon-star.png"
-            alt="Star"
-            size={44}
+            size={72}
             floatClass="animate-float-slow"
-            style={{ bottom: "20%", left: "8%", transform: "rotate(15deg)" }}
+            style={{ bottom: "18%", left: "6%", transform: "rotate(12deg)" }}
           />
           <FloatingIcon
-            src="/landing/icon-heart.png"
-            alt="Heart"
-            size={48}
+            src="/landing/icon-globe.png"
+            alt="Explore the world"
+            size={80}
             floatClass="animate-float-delayed"
-            style={{ bottom: "12%", right: "7%", transform: "rotate(-6deg)" }}
+            style={{ bottom: "10%", right: "5%", transform: "rotate(-6deg)" }}
           />
 
           <div className="flex flex-col items-center text-center gap-6 animate-fade-in-up">
-            {/* Logo */}
-            <div className="animate-float">
-              <Image
-                src="/logos/exploree.png"
-                alt="Exploree logo"
-                width={120}
-                height={120}
-                priority
-                className="drop-shadow-lg"
-              />
-            </div>
-
             {/* Gradient headline */}
             <h1 className="text-4xl sm:text-5xl lg:text-6xl font-extrabold tracking-tight leading-[1.1]">
               Discover places{" "}
@@ -339,25 +374,16 @@ export default function LandingPage() {
           </div>
         </section>
 
-        {/* ===== App Preview - Hero image ===== */}
-        <section className="mx-auto max-w-5xl px-6 pb-24">
-          <div className="relative">
-            {/* Glow behind the image */}
+        {/* ===== App Preview - Hero swipe deck ===== */}
+        <section className="mx-auto max-w-6xl px-6 pb-24">
+          <div className="relative flex justify-center">
+            {/* Glow behind the deck */}
             <div
-              className="absolute inset-0 -m-8 rounded-3xl blur-3xl opacity-30 dark:opacity-50"
+              className="pointer-events-none absolute top-1/2 left-1/2 h-[460px] w-[460px] -translate-x-1/2 -translate-y-1/2 rounded-full blur-3xl opacity-30 dark:opacity-50"
               style={{ background: "linear-gradient(135deg, #f17ea7 0%, #8e79ff 50%, #fcd77f 100%)" }}
             />
-            <div className="relative rounded-2xl overflow-hidden shadow-2xl shadow-black/30 dark:shadow-black/60 border border-zinc-200/50 dark:border-white/10">
-              <Image
-                src="/landing/swipe-preview.png"
-                alt="Exploree swipe deck in action"
-                width={1024}
-                height={1024}
-                className="w-full h-auto"
-                priority
-              />
-              {/* Glass overlay strip */}
-              <div className="absolute bottom-0 inset-x-0 h-20 bg-gradient-to-t from-zinc-950/60 to-transparent" />
+            <div className="relative w-full max-w-[380px]">
+              <SwipeCardMockup variant="deck" />
             </div>
           </div>
         </section>
@@ -365,10 +391,11 @@ export default function LandingPage() {
         {/* ===== How it works ===== */}
         <section className="relative mx-auto max-w-6xl px-6 py-20">
           <FloatingIcon
-            src="/landing/icon-camera.png"
+            src="/landing/icon-camera-clean.png"
             alt="Camera"
-            size={56}
+            size={72}
             floatClass="animate-float-slow"
+            cropShadow={false}
             style={{ top: "-10px", right: "3%", transform: "rotate(10deg)" }}
           />
           <HowItWorks />
@@ -381,16 +408,14 @@ export default function LandingPage() {
             badge="Core Experience"
             title="A swipe deck that never runs dry"
             description="An endless stream of beautiful places, curated by real travellers. Swipe right to save, left to skip — the algorithm learns your taste and serves you fresh discoveries every time."
-            imageSrc="/landing/swipe-preview.png"
-            imageAlt="Swipe deck feature"
+            visual={<SwipeCardMockup variant="single" />}
           />
           <FeatureShowcase
             icon={BookmarkPlus}
             badge="Organization"
             title="Collections that tell a story"
             description="Group your saved spots into themed collections — weekend getaways, dream trips, food spots. Keep them private or share them with friends. Your personal travel journal, always ready."
-            imageSrc="/landing/collections-preview.png"
-            imageAlt="Collections feature"
+            visual={<CollectionsMockup />}
             reverse
           />
           <FeatureShowcase
@@ -398,8 +423,7 @@ export default function LandingPage() {
             badge="Visualization"
             title="See it all on the map"
             description="Every saved spot and discovery pinned on a beautiful interactive map. Plan your next adventure by seeing what's nearby, or zoom out to dream about your next continent."
-            imageSrc="/landing/map-preview.png"
-            imageAlt="Map view feature"
+            visual={<MapMockup />}
           />
         </section>
 
@@ -408,16 +432,9 @@ export default function LandingPage() {
           <FloatingIcon
             src="/landing/icon-globe.png"
             alt="Globe"
-            size={80}
+            size={100}
             floatClass="animate-float-slow-delayed"
             style={{ top: "10%", left: "2%", transform: "rotate(-5deg)" }}
-          />
-          <FloatingIcon
-            src="/landing/icon-star.png"
-            alt="Star"
-            size={40}
-            floatClass="animate-float"
-            style={{ bottom: "15%", right: "4%", transform: "rotate(20deg)" }}
           />
           <StatsSection />
         </section>
@@ -430,10 +447,11 @@ export default function LandingPage() {
         {/* ===== FAQ ===== */}
         <section className="relative mx-auto max-w-3xl px-6 py-20">
           <FloatingIcon
-            src="/landing/icon-waypoint.png"
-            alt="Map pin"
-            size={50}
+            src="/logos/exploree.png"
+            alt="Exploree pin"
+            size={64}
             floatClass="animate-float-slow"
+            cropShadow={false}
             style={{ top: "5%", right: "-8%", transform: "rotate(12deg)" }}
           />
           <FaqSection />
@@ -698,7 +716,11 @@ function BottomCTA() {
             Join the community of curious travellers discovering incredible
             places every day. It only takes a few seconds.
           </p>
-          <ConsentGate />
+          {/* CTA card is always dark — scope ConsentGate to dark styling so its
+              text stays readable even when the page is in light mode */}
+          <div className="dark">
+            <ConsentGate />
+          </div>
         </div>
       </div>
     </div>

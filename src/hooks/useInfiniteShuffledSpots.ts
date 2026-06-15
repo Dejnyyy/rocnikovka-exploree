@@ -1,5 +1,6 @@
 import { useRef, useState, useCallback, useEffect } from "react";
 import type { Spot } from "@/components/SwipeDeck";
+import { takeDeckBatch } from "@/lib/feed";
 
 /**
  * Fisher-Yates shuffle algorithm for randomizing array order
@@ -36,6 +37,9 @@ export function useInfiniteShuffledSpots(
   const queueRef = useRef<Spot[]>([]);
   // Set of all IDs we have ever ingested (from API pages)
   const knownIdsRef = useRef<Set<string>>(new Set());
+  // Every spot we have ever ingested, kept so we can recycle them into the
+  // deck when the API has no fresh content left (small DBs, end of feed).
+  const allKnownRef = useRef<Spot[]>([]);
   // Displayed spots – what SwipeDeck renders
   const [displayedSpots, setDisplayedSpots] = useState<Spot[]>([]);
   const initializedRef = useRef(false);
@@ -56,6 +60,7 @@ export function useInfiniteShuffledSpots(
 
     if (fresh.length > 0) {
       queueRef.current.push(...fresh);
+      allKnownRef.current.push(...fresh);
     }
 
     // First load → immediately show an initial batch
@@ -87,19 +92,22 @@ export function useInfiniteShuffledSpots(
         onFetchMore();
       }
 
-      if (queueRef.current.length === 0) {
-        // Nothing in queue — can't do anything until API responds
+      // Draw the next batch. When the queue is empty, takeDeckBatch recycles
+      // already-known spots (reshuffled) so the deck never goes blank just
+      // because the API has nothing new to add (e.g. small DBs / end of feed).
+      const { batch: nextBatch, queue: remaining } = takeDeckBatch(
+        shuffleArray(queueRef.current),
+        allKnownRef.current,
+        batchSize * 2,
+        shuffleArray,
+      );
+      queueRef.current = remaining;
+
+      if (nextBatch.length === 0) {
+        // Genuinely nothing to show yet — wait for the API to respond.
         isReshufflingRef.current = false;
         return;
       }
-
-      // Shuffle the queue and grab a batch
-      const shuffled = shuffleArray(queueRef.current);
-      const nextBatch = shuffled.splice(
-        0,
-        Math.min(batchSize * 2, shuffled.length),
-      );
-      queueRef.current = shuffled; // put the rest back
 
       setDisplayedSpots((prev) => [...prev, ...nextBatch]);
 
