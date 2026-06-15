@@ -422,7 +422,6 @@ export default function CollectionPage({
         <meta name="description" content={desc} />
         <meta property="og:title" content={title} />
         <meta property="og:description" content={desc} />
-        <link rel="canonical" href={`/collections/${col.slug}`} />
       </Head>
 
       <HeaderWithMenu

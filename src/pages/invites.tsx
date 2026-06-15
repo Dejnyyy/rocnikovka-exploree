@@ -282,7 +282,6 @@ export default function InvitesPage(
       <Head>
         <title>Invites</title>
         <meta name="description" content="Your pending collection invites" />
-        <link rel="canonical" href="/invites" />
       </Head>
 
       <HeaderWithMenu displayName={viewerName} avatarUrl={viewerAvatar} />

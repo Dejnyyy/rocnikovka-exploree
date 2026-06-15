@@ -5,6 +5,7 @@ import type { Session } from "next-auth";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useEffect, useState } from "react";
 import { Quicksand } from "next/font/google";
+import { useRouter } from "next/router";
 
 import "@/styles/globals.css";
 
@@ -52,6 +53,9 @@ function ThemeAwareToastContainer() {
 
 export default function App({ Component, pageProps }: AppProps) {
   const [queryClient] = useState(() => new QueryClient());
+  const router = useRouter();
+  const cleanPath = router.asPath.split("?")[0].split("#")[0];
+  const canonicalUrl = `https://exploree.dejny.eu${cleanPath === "/" ? "" : cleanPath}`;
 
   return (
     <SessionProvider
@@ -68,9 +72,11 @@ export default function App({ Component, pageProps }: AppProps) {
           />
           <meta
             name="description"
-            content="Swipe through real spots shared by real people, save your favourites into collections, and follow explorers with great taste. Free, beautiful, and community-driven."
+            content="Swipe through real spots shared by real people, save your favourites, and follow explorers with great taste. Free, beautiful, and community-driven."
           />
           <meta name="theme-color" content="#f472b6" />
+
+          <link rel="canonical" href={canonicalUrl} key="canonical" />
 
           {/* Open Graph */}
           <meta property="og:type" content="website" />
@@ -83,7 +89,7 @@ export default function App({ Component, pageProps }: AppProps) {
             property="og:description"
             content="Swipe through real spots shared by real people, save your favourites into collections, and follow explorers with great taste."
           />
-          <meta property="og:url" content="https://exploree.dejny.eu/" />
+          <meta property="og:url" content={canonicalUrl} />
           <meta
             property="og:image"
             content="https://exploree.dejny.eu/og-image.png"
@@ -97,6 +103,7 @@ export default function App({ Component, pageProps }: AppProps) {
 
           {/* Twitter */}
           <meta name="twitter:card" content="summary_large_image" />
+          <meta name="twitter:site" content="@exploree" />
           <meta
             name="twitter:title"
             content="Exploree — Discover places worth the trip"

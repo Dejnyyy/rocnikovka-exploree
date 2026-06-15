@@ -42,8 +42,7 @@ export function MapMockup() {
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/landing/world-landmasses.svg"
-        alt=""
-        aria-hidden
+        alt="World map landmasses outline"
         className="absolute inset-0 h-full w-full object-contain opacity-90"
       />
 

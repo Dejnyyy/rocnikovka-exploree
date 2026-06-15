@@ -295,6 +295,7 @@ export default function DiscoverPage() {
 
       {/* Masonry grid */}
       <main className="mx-auto max-w-7xl px-4 sm:px-8 py-8 pb-32 mt-16 md:pb-8 md:ml-72">
+        <h1 className="sr-only">Discover Places — Exploree</h1>
         <div className="columns-1 sm:columns-2 md:columns-3 xl:columns-4 gap-6 [column-fill:_balance]">
           {filtered.map((pin) => (
             <PinCard key={pin.id} pin={pin} />

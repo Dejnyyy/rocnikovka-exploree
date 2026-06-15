@@ -160,7 +160,6 @@ export default function SpotDetailPage({
         <meta property="og:title" content={title} />
         <meta property="og:description" content={description} />
         {spot.coverUrl && <meta property="og:image" content={spot.coverUrl} />}
-        <link rel="canonical" href={`/spot/${spot.slug}`} />
       </Head>
 
       <HeaderWithMenu

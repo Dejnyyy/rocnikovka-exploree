@@ -234,6 +234,7 @@ function AuthedHome() {
       />
 
       <main className="px-4 sm:px-6 pt-24 pb-32 md:pb-6 md:ml-72 overscroll-y-contain">
+        <h1 className="sr-only">Exploree — Discover places worth the trip</h1>
         <div className="mx-auto flex w-full max-w-5xl items-start justify-center gap-8">
           {/* Swipe deck */}
           <div className="flex items-center justify-center">

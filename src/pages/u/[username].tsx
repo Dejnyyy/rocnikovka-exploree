@@ -489,7 +489,6 @@ export default function PublicProfilePage({
         <meta property="og:title" content={title} />
         <meta property="og:description" content={desc} />
         {profile.image && <meta property="og:image" content={profile.image} />}
-        <link rel="canonical" href={`/u/${profile.username}`} />
       </Head>
 
       <HeaderWithMenu
