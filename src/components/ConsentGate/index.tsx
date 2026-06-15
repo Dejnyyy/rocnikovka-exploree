@@ -70,10 +70,10 @@ export default function ConsentGate() {
             markPendingConsent();
             signIn("google");
           }}
-          className="w-full rounded-full px-8 py-3 text-base
-                     bg-black text-white font-semibold transition-all
-                     enabled:cursor-pointer enabled:hover:bg-gradient-to-r enabled:hover:from-pink-400 enabled:hover:to-yellow-300 enabled:hover:text-black
-                     disabled:opacity-40 disabled:cursor-not-allowed"
+          className="w-full rounded-full px-8 py-3 text-base font-semibold transition-all
+                     bg-white text-black dark:bg-black dark:text-white
+                     enabled:cursor-pointer disabled:cursor-not-allowed disabled:opacity-60
+                     enabled:hover:bg-gradient-to-r enabled:hover:from-pink-400 enabled:hover:to-yellow-300 enabled:hover:text-black dark:enabled:hover:text-black"
         >
           Continue with Google
         </button>
