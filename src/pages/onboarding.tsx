@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useSession } from "next-auth/react";
+import Head from "next/head";
 import HeaderWithMenu from "@/components/HeaderWithMenu";
 
 /* ---------------- core --------------------------------------------------- */
@@ -192,7 +193,12 @@ export default function OnboardingPage() {
   if (!mounted) return null;
 
   return (
-    <div
+    <>
+      <Head>
+        <title>Onboarding • Exploree</title>
+        <meta name="description" content="Set up your Exploree username and profile handle." />
+      </Head>
+      <div
       className="relative min-h-screen overflow-hidden transition-colors
                  bg-white text-zinc-900
                  dark:bg-[#1f1f2b] dark:text-white"
@@ -414,5 +420,6 @@ export default function OnboardingPage() {
         </div>
       </main>
     </div>
+    </>
   );
 }

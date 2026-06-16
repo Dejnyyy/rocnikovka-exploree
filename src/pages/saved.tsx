@@ -4,6 +4,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { useSession } from "next-auth/react";
 import { useState } from "react";
+import Head from "next/head";
 import HeaderWithMenu from "@/components/HeaderWithMenu";
 import { useMySaved } from "@/hooks/me";
 import { useInfiniteQuery } from "@tanstack/react-query";
@@ -157,6 +158,10 @@ export default function SavedPage() {
 
   return (
     <QueryClientProvider client={qc}>
+      <Head>
+        <title>Saved • Exploree</title>
+        <meta name="description" content="View all the places you've saved on Exploree." />
+      </Head>
       <div className="min-h-screen bg-white text-zinc-900 dark:bg-zinc-950 dark:text-zinc-100">
         <HeaderWithMenu
           avatarUrl={session?.user?.image ?? undefined}

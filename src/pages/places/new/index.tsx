@@ -1,6 +1,7 @@
 // /pages/places/new.tsx
 import { useEffect, useMemo, useRef, useState } from "react";
 import Image from "next/image";
+import Head from "next/head";
 import { useRouter } from "next/router";
 import { Quicksand } from "next/font/google";
 import { useSession } from "next-auth/react";
@@ -258,7 +259,15 @@ export default function NewPlacePage() {
   }
   if (!session) return null;
 
-  return <CreatePlaceInner />;
+  return (
+    <>
+      <Head>
+        <title>Create Place • Exploree</title>
+        <meta name="description" content="Add a new spot to Exploree. Share photos, location, and tags." />
+      </Head>
+      <CreatePlaceInner />
+    </>
+  );
 }
 
 function CreatePlaceInner() {

@@ -1,13 +1,23 @@
 // src/pages/map.tsx
 import dynamic from "next/dynamic";
+import Head from "next/head";
 
 function MapPageWrapper() {
-  return <ClientMapPage />;
+  return (
+    <>
+      <Head>
+        <title>Map • Exploree</title>
+        <meta name="description" content="View explore spots and locations on an interactive world map." />
+      </Head>
+      <ClientMapPage />
+    </>
+  );
 }
 export default dynamic(() => Promise.resolve(MapPageWrapper), { ssr: false });
 
 // ---- client-only map below ----
 import { useEffect, useRef, useState } from "react";
+import Link from "next/link";
 import maplibregl, {
   Map as MLMap,
   Marker as MLMarker,
@@ -127,5 +137,19 @@ function ClientMapPage() {
     }
   }, [spots]);
 
-  return <div ref={containerRef} style={{ width: "100vw", height: "100vh" }} />;
+  return (
+    <div className="relative w-screen h-screen">
+      {/* Back button */}
+      <div className="absolute left-4 top-4 z-10">
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 rounded-full border border-zinc-200 bg-white/90 px-4 py-2 text-sm font-semibold text-zinc-900 shadow-md backdrop-blur hover:bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-900/90 dark:text-zinc-100 dark:hover:bg-zinc-800 transition-colors"
+        >
+          ← Back to Feed
+        </Link>
+      </div>
+      <h1 className="sr-only">Exploree Map View</h1>
+      <div ref={containerRef} className="h-full w-full" />
+    </div>
+  );
 }
