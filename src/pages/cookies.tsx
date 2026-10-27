@@ -12,10 +12,10 @@ export default function CookiesPage() {
   return (
     <>
       <Head>
-        <title>Cookies — Exploree</title>
+        <title>Cookies — what Exploree stores in your browser</title>
         <meta
           name="description"
-          content="What cookies and data Exploree stores, and what you accept by using the app."
+          content="Which cookies and local data Exploree stores in your browser, why the app needs them for sign-in and preferences, and what you accept by using it."
         />
       </Head>
 

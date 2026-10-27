@@ -12,10 +12,10 @@ export default function PrivacyPolicyPage() {
   return (
     <>
       <Head>
-        <title>Privacy Policy — Exploree</title>
+        <title>Privacy Policy — how Exploree handles your data</title>
         <meta
           name="description"
-          content="Privacy policy for the Exploree app — learn how we collect, use, and protect your personal data."
+          content="Privacy policy for Exploree, the app for discovering places worth the trip: what personal data we collect, how we use and protect it, and your rights."
         />
       </Head>
 
