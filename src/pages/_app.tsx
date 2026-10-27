@@ -116,6 +116,23 @@ export default function App({ Component, pageProps }: AppProps) {
             name="twitter:image"
             content="https://exploree.dejny.eu/og-image.png"
           />
+          <script
+            type="application/ld+json"
+            key="org-jsonld"
+            dangerouslySetInnerHTML={{
+              __html: JSON.stringify({
+                "@context": "https://schema.org",
+                "@type": "Organization",
+                name: "Exploree",
+                url: "https://exploree.dejny.eu",
+                logo: "https://exploree.dejny.eu/apple-touch-icon.png",
+                description:
+                  "Swipe through real spots shared by real people, save your favourites, and follow explorers with great taste. Free, beautiful, and community-driven.",
+                founder: { "@type": "Person", name: "Daniel Slabý", url: "https://dejny.eu" },
+                sameAs: ["https://dejny.eu", "https://github.com/Dejnyyy/rocnikovka-exploree"],
+              }),
+            }}
+          />
         </Head>
         <div className={quicksand.className}>
           <Component {...pageProps} />

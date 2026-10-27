@@ -16,6 +16,19 @@ import { trimRecentlySeen } from "@/lib/feed";
 import ConsentModal from "@/components/ConsentModal";
 import { hasPendingConsent, clearPendingConsent } from "@/components/ConsentGate";
 import LandingPage from "@/components/LandingPage";
+import type { GetServerSideProps } from "next";
+import { getServerSession } from "next-auth/next";
+import { authOptions } from "@/pages/api/auth/[...nextauth]";
+
+// Session na serveru → SessionProvider (v _app) dostane hotový stav, takže se
+// nepřihlášenému (i crawlerům) landing page vyrenderuje rovnou v HTML místo
+// „Checking session…“.
+export const getServerSideProps: GetServerSideProps = async ({ req, res }) => {
+  const session = await getServerSession(req, res, authOptions);
+  // Přihlášenému session nepředáváme (klient si ji načte jako dřív) — mění se
+  // jen vykreslení pro nepřihlášené.
+  return { props: session ? {} : { session: null } };
+};
 
 const quicksand = Quicksand({
   subsets: ["latin"],
